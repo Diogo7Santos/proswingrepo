@@ -12,9 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
+    primary = ObsidianGray,
+    onPrimary = White,
+    onPrimaryContainer = Gray,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    onSecondary = Black,
+    onSecondaryContainer = Beige,
+    tertiary = Purple40,
+    onTertiary = Pink80,
+    surfaceVariant = LightGold,
+    outline = Green,
+    background = CharcoalBlack
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -37,7 +45,7 @@ private val LightColorScheme = lightColorScheme(
 fun ProswingTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

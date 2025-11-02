@@ -1,6 +1,7 @@
 package com.example.proswing.ui.navigation
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -20,6 +21,7 @@ fun AppNavHost() {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val colors = MaterialTheme.colorScheme
 
     // Drawer items with icons
     val drawerItems = listOf(
@@ -32,7 +34,10 @@ fun AppNavHost() {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
+            ModalDrawerSheet (
+                drawerContainerColor = colors.primary,
+                drawerContentColor = colors.onPrimary
+            ){
                 Text(
                     text = "Menu",
                     style = MaterialTheme.typography.titleLarge,
@@ -50,6 +55,14 @@ fun AppNavHost() {
                                 launchSingleTop = true
                             }
                         },
+                        colors = NavigationDrawerItemDefaults.colors(
+                            selectedContainerColor = colors.onPrimaryContainer, // background highlight
+                            unselectedContainerColor = colors.primary,         // background normal
+                            selectedIconColor = colors.onPrimary,     // icon when selected
+                            unselectedIconColor = colors.onPrimary.copy(alpha = 0.5f), // icon when unselected
+                            selectedTextColor = colors.onPrimary,     // text when selected
+                            unselectedTextColor = colors.onPrimary.copy(alpha = 0.5f)  // text when unselected
+                        ),
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
                 }
@@ -58,14 +71,25 @@ fun AppNavHost() {
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("ProSwing") },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                    }
-                )
+                Column {
+                    TopAppBar(
+                        title = { Text("ProSwing") },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary,     // background color
+                            titleContentColor = MaterialTheme.colorScheme.onPrimary, // title text color
+                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary // icon color
+                        )
+                    )
+                    Divider(
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        thickness = 4.dp
+                    )
+                }
             },
             bottomBar = { BottomNavigationBar(navController) }
         ) { innerPadding ->

@@ -18,7 +18,10 @@ val Black = Color(0xFF000000)
 
 val Beige = Color(0xFFEDE8D0)
 val LightGreen = Color(0xFF9FF695)
+val Green = Color(0xFF00FF00)
 
 // Dark Theme Colors
-val DarkGreen = Color(0xFF243A1B)
-val Leather = Color(0xFF3F2C20)
+val CharcoalBlack = Color(0xFF2E2E2E)
+val ObsidianGray = Color(0xFF1E1E1E)
+val Gray = Color(0xFF525252)
+val LightGold = Color(0xFFFDDC5C)
