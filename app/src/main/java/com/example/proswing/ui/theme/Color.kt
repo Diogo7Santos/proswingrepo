@@ -17,7 +17,10 @@ val Black = Color(0xFF000000)
 // Light Theme Colors
 
 val Beige = Color(0xFFEDE8D0)
-val LightGreen = Color(0xFF9FF695)
+val PorcelainWhite = Color(0xFFFCFCFA)
+val GraphiteGray = Color(0xFF1F1F1F)
+val LightGreen = Color(0xFFEAF4E2)
+val MintCream = Color(0xFFE9F7E5)
 val Green = Color(0xFF00FF00)
 
 // Dark Theme Colors

@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.proswing.ui.screens.*
 import kotlinx.coroutines.launch
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,36 +32,46 @@ fun AppNavHost() {
         NavDrawerItem("Settings", Destinations.SETTINGS, Icons.Default.Settings)
     )
 
+    // Observe the current route to highlight the selected item
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet (
+            ModalDrawerSheet(
                 drawerContainerColor = colors.primary,
                 drawerContentColor = colors.onPrimary
-            ){
+            ) {
                 Text(
                     text = "Menu",
                     style = MaterialTheme.typography.titleLarge,
+                    color = colors.onPrimary,
                     modifier = Modifier.padding(16.dp)
                 )
+
                 drawerItems.forEach { item ->
+                    val selected = currentRoute == item.route
                     NavigationDrawerItem(
                         icon = { Icon(item.icon, contentDescription = item.label) },
                         label = { Text(item.label) },
-                        selected = false,
+                        selected = selected,
                         onClick = {
-                            scope.launch { drawerState.close() }
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.startDestinationId)
-                                launchSingleTop = true
+                            scope.launch {
+                                drawerState.close()
+                                // Navigate and update route selection
+                                navController.navigate(item.route) {
+                                    popUpTo(navController.graph.startDestinationId)
+                                    launchSingleTop = true
+                                }
                             }
                         },
                         colors = NavigationDrawerItemDefaults.colors(
                             selectedContainerColor = colors.onPrimaryContainer, // background highlight
                             unselectedContainerColor = colors.primary,         // background normal
-                            selectedIconColor = colors.onPrimary,     // icon when selected
+                            selectedIconColor = colors.onPrimary,               // icon when selected
                             unselectedIconColor = colors.onPrimary.copy(alpha = 0.5f), // icon when unselected
-                            selectedTextColor = colors.onPrimary,     // text when selected
+                            selectedTextColor = colors.onPrimary,               // text when selected
                             unselectedTextColor = colors.onPrimary.copy(alpha = 0.5f)  // text when unselected
                         ),
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
