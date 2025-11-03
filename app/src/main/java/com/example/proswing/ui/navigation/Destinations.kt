@@ -6,4 +6,7 @@ object Destinations {
     const val ANALYSE = "analyse"
     const val SETTINGS = "settings"
     const val MYBAG = "mybag"
+    const val HANDICAP = "handicap"
+    const val SCORECARD = "scorecard"
+    const val CADDIE = "caddie"
 }

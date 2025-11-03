@@ -1,8 +1,12 @@
 package com.example.proswing.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -10,6 +14,8 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -24,31 +30,30 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
     var showDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val colors = MaterialTheme.colorScheme
 
     Scaffold(
+        containerColor = colors.background,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true }) {
-                Text("+")
-            }
+            FloatingActionButton(onClick = { showDialog = true }) { Text("+") }
         }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .background(colors.background)
         ) {
             if (clubs.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("No clubs yet. Tap + to add one.", fontSize = 18.sp)
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(colors.background)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -58,7 +63,6 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                                 if (value == SwipeToDismissBoxValue.EndToStart ||
                                     value == SwipeToDismissBoxValue.StartToEnd
                                 ) {
-                                    // Delete and show undo option
                                     viewModel.deleteClub(club)
                                     scope.launch {
                                         val result = snackbarHostState.showSnackbar(
@@ -67,7 +71,6 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                                             withDismissAction = true
                                         )
                                         if (result == SnackbarResult.ActionPerformed) {
-                                            // Undo pressed — reinsert
                                             viewModel.addClub(
                                                 club.type,
                                                 club.variant,
@@ -81,35 +84,78 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                             }
                         )
 
+                        // progress value for swipe animation
+                        val fraction = dismissState.progress
+                        val iconAlpha by animateFloatAsState(
+                            targetValue = fraction,
+                            label = "iconAlpha"
+                        )
+                        val iconScale by animateFloatAsState(
+                            targetValue = 0.8f + 0.4f * fraction,
+                            label = "iconScale"
+                        )
+
+                        // Move icon horizontally as user swipes
+                        val direction = dismissState.dismissDirection
+                        val offsetX = when (direction) {
+                            SwipeToDismissBoxValue.StartToEnd -> 120f * fraction
+                            SwipeToDismissBoxValue.EndToStart -> -120f * fraction
+                            else -> 0f
+                        }
+
+                        // Fade card when dismissed
+                        val cardAlpha by animateFloatAsState(
+                            targetValue = if (dismissState.targetValue != SwipeToDismissBoxValue.Settled) 0f else 1f,
+                            label = "cardAlpha"
+                        )
+
                         SwipeToDismissBox(
                             state = dismissState,
                             backgroundContent = {
-                                val color = when (dismissState.targetValue) {
-                                    SwipeToDismissBoxValue.StartToEnd,
-                                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
-                                    else -> MaterialTheme.colorScheme.surfaceVariant
-                                }
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(8.dp),
-                                    contentAlignment = Alignment.Center
+                                        .background(colors.background)
+                                        .padding(horizontal = 24.dp),
+                                    contentAlignment = when (dismissState.dismissDirection) {
+                                        SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                                        SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                                        else -> Alignment.Center
+                                    }
                                 ) {
-                                    Text(
-                                        text = "Deleting...",
-                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = colors.onBackground.copy(alpha = iconAlpha),
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .scale(iconScale)
+                                            .offset(x = offsetX.dp)
                                     )
                                 }
                             },
                             enableDismissFromStartToEnd = true,
                             enableDismissFromEndToStart = true
                         ) {
-                            ClubCard(
-                                type = club.type,
-                                variant = club.variant,
-                                brand = club.brand,
-                                model = club.model
-                            )
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .graphicsLayer { alpha = cardAlpha },
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = colors.surface,
+                                    contentColor = colors.onSurface
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        "${club.type} ${club.variant ?: ""}".trim(),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text("Brand: ${club.brand}")
+                                    Text("Model: ${club.model}")
+                                }
+                            }
                         }
                     }
                 }
@@ -125,20 +171,6 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                 showDialog = false
             }
         )
-    }
-}
-
-@Composable
-fun ClubCard(type: String, variant: String?, brand: String, model: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("$type ${variant ?: ""}".trim(), style = MaterialTheme.typography.titleMedium)
-            Text("Brand: $brand")
-            Text("Model: $model")
-        }
     }
 }
 
@@ -246,10 +278,7 @@ fun AddClubDialog(onDismiss: () -> Unit, onAdd: (GolfClub) -> Unit) {
 fun VariantSelector(variants: List<String>, onSelect: (String) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         variants.forEach { label ->
-            AssistChip(
-                onClick = { onSelect(label) },
-                label = { Text(label) }
-            )
+            AssistChip(onClick = { onSelect(label) }, label = { Text(label) })
         }
     }
 }
