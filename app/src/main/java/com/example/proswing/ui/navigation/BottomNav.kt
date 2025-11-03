@@ -18,6 +18,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.proswing.ui.screens.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import com.example.proswing.R
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.size
+
 
 
 @Composable
@@ -36,9 +41,9 @@ fun BottomNavGraph(navController: NavHostController) {
 fun BottomNavigationBar(navController: NavController) {
     // Temporary standard icons — you can replace these with your SVGs later
     val items = listOf(
-        NavItem("Learn", Icons.Filled.Person, Destinations.LEARN),
-        NavItem("Home", Icons.Filled.Home, Destinations.HOME),
-        NavItem("Analyse", Icons.Filled.Settings, Destinations.ANALYSE)
+        NavItem("Learn", R.drawable.ic_learn, Destinations.LEARN),
+        NavItem("Home", R.drawable.ic_home, Destinations.HOME),
+        NavItem("Analyse", R.drawable.ic_analyse, Destinations.ANALYSE)
     )
 
     val colors = MaterialTheme.colorScheme
@@ -57,7 +62,13 @@ fun BottomNavigationBar(navController: NavController) {
         ) {
             items.forEach { item ->
                 NavigationBarItem(
-                    icon = { Icon(item.icon, contentDescription = item.label) },
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = item.iconRes),
+                            contentDescription = item.label,
+                            modifier = Modifier.size(30.dp)   // 🔹 standard Material size
+                        )
+                    },
                     label = { Text(item.label) },
                     selected = currentRoute == item.route,
                     onClick = {
@@ -83,6 +94,6 @@ fun BottomNavigationBar(navController: NavController) {
 
 data class NavItem(
     val label: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val iconRes: Int, // resource ID instead of ImageVector
     val route: String
 )

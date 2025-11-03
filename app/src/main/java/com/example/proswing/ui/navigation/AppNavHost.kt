@@ -4,17 +4,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.proswing.R
 import com.example.proswing.ui.screens.*
 import kotlinx.coroutines.launch
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,12 +30,12 @@ fun AppNavHost() {
     val scope = rememberCoroutineScope()
     val colors = MaterialTheme.colorScheme
 
-    // Drawer items with icons
+    // Drawer items — use SVGs for first three, Material icon for Settings
     val drawerItems = listOf(
-        NavDrawerItem("Home", Destinations.HOME, Icons.Default.Home),
-        NavDrawerItem("Learn", Destinations.LEARN, Icons.Default.Info),
-        NavDrawerItem("Analyse", Destinations.ANALYSE, Icons.Default.Person),
-        NavDrawerItem("Settings", Destinations.SETTINGS, Icons.Default.Settings)
+        NavDrawerItem("Home", Destinations.HOME, R.drawable.ic_home, isSvg = true),
+        NavDrawerItem("Learn", Destinations.LEARN, R.drawable.ic_learn, isSvg = true),
+        NavDrawerItem("Analyse", Destinations.ANALYSE, R.drawable.ic_analyse, isSvg = true),
+        NavDrawerItem("Settings", Destinations.SETTINGS, null, isSvg = false)
     )
 
     // Observe the current route to highlight the selected item
@@ -53,13 +59,26 @@ fun AppNavHost() {
                 drawerItems.forEach { item ->
                     val selected = currentRoute == item.route
                     NavigationDrawerItem(
-                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        icon = {
+                            if (item.isSvg && item.iconRes != null) {
+                                Icon(
+                                    painter = painterResource(id = item.iconRes),
+                                    contentDescription = item.label,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Filled.Settings,
+                                    contentDescription = item.label,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                        },
                         label = { Text(item.label) },
                         selected = selected,
                         onClick = {
                             scope.launch {
                                 drawerState.close()
-                                // Navigate and update route selection
                                 navController.navigate(item.route) {
                                     popUpTo(navController.graph.startDestinationId)
                                     launchSingleTop = true
@@ -67,12 +86,12 @@ fun AppNavHost() {
                             }
                         },
                         colors = NavigationDrawerItemDefaults.colors(
-                            selectedContainerColor = colors.onPrimaryContainer, // background highlight
-                            unselectedContainerColor = colors.primary,         // background normal
-                            selectedIconColor = colors.onPrimary,               // icon when selected
-                            unselectedIconColor = colors.onPrimary.copy(alpha = 0.5f), // icon when unselected
-                            selectedTextColor = colors.onPrimary,               // text when selected
-                            unselectedTextColor = colors.onPrimary.copy(alpha = 0.5f)  // text when unselected
+                            selectedContainerColor = colors.onPrimaryContainer,
+                            unselectedContainerColor = colors.primary,
+                            selectedIconColor = colors.onPrimary,
+                            unselectedIconColor = colors.onPrimary.copy(alpha = 0.5f),
+                            selectedTextColor = colors.onPrimary,
+                            unselectedTextColor = colors.onPrimary.copy(alpha = 0.5f)
                         ),
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
@@ -91,13 +110,13 @@ fun AppNavHost() {
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primary,     // background color
-                            titleContentColor = MaterialTheme.colorScheme.onPrimary, // title text color
-                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary // icon color
+                            containerColor = colors.primary,
+                            titleContentColor = colors.onPrimary,
+                            navigationIconContentColor = colors.onPrimary
                         )
                     )
                     Divider(
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        color = colors.outline.copy(alpha = 0.5f),
                         thickness = 4.dp
                     )
                 }
@@ -123,5 +142,6 @@ fun AppNavHost() {
 data class NavDrawerItem(
     val label: String,
     val route: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+    val iconRes: Int?, // nullable for non-SVG icons
+    val isSvg: Boolean
 )
