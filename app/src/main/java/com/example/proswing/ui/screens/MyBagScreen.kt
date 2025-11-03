@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,14 +15,18 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proswing.viewmodel.MyBagViewModel
 import com.google.accompanist.flowlayout.FlowRow
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
     val clubs by viewModel.clubs.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = { showDialog = true }) {
                 Text("+")
@@ -32,7 +39,10 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                 .fillMaxSize()
         ) {
             if (clubs.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text("No clubs yet. Tap + to add one.", fontSize = 18.sp)
                 }
             } else {
@@ -42,13 +52,65 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(clubs) { club ->
-                        ClubCard(
-                            type = club.type,
-                            variant = club.variant,
-                            brand = club.brand,
-                            model = club.model
+                    items(clubs, key = { it.id }) { club ->
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { value ->
+                                if (value == SwipeToDismissBoxValue.EndToStart ||
+                                    value == SwipeToDismissBoxValue.StartToEnd
+                                ) {
+                                    // Delete and show undo option
+                                    viewModel.deleteClub(club)
+                                    scope.launch {
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "Removed ${club.brand} ${club.model}",
+                                            actionLabel = "Undo",
+                                            withDismissAction = true
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            // Undo pressed — reinsert
+                                            viewModel.addClub(
+                                                club.type,
+                                                club.variant,
+                                                club.brand,
+                                                club.model
+                                            )
+                                        }
+                                    }
+                                    true
+                                } else false
+                            }
                         )
+
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            backgroundContent = {
+                                val color = when (dismissState.targetValue) {
+                                    SwipeToDismissBoxValue.StartToEnd,
+                                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                                    else -> MaterialTheme.colorScheme.surfaceVariant
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Deleting...",
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            },
+                            enableDismissFromStartToEnd = true,
+                            enableDismissFromEndToStart = true
+                        ) {
+                            ClubCard(
+                                type = club.type,
+                                variant = club.variant,
+                                brand = club.brand,
+                                model = club.model
+                            )
+                        }
                     }
                 }
             }
@@ -140,7 +202,10 @@ fun AddClubDialog(onDismiss: () -> Unit, onAdd: (GolfClub) -> Unit) {
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBrand) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
-                    ExposedDropdownMenu(expanded = expandedBrand, onDismissRequest = { expandedBrand = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expandedBrand,
+                        onDismissRequest = { expandedBrand = false }
+                    ) {
                         brands.forEach { brand ->
                             DropdownMenuItem(
                                 text = { Text(brand) },
