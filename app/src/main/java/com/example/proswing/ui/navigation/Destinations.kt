@@ -5,4 +5,5 @@ object Destinations {
     const val LEARN = "learn"
     const val ANALYSE = "analyse"
     const val SETTINGS = "settings"
+    const val MYBAG = "mybag"
 }

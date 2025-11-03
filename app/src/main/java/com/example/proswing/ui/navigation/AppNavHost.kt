@@ -35,6 +35,7 @@ fun AppNavHost() {
         NavDrawerItem("Home", Destinations.HOME, R.drawable.ic_home, isSvg = true),
         NavDrawerItem("Learn", Destinations.LEARN, R.drawable.ic_learn, isSvg = true),
         NavDrawerItem("Analyse", Destinations.ANALYSE, R.drawable.ic_analyse, isSvg = true),
+        NavDrawerItem("My Bag", Destinations.MYBAG, R.drawable.ic_mybag, isSvg = true),
         NavDrawerItem("Settings", Destinations.SETTINGS, null, isSvg = false)
     )
 
@@ -131,6 +132,7 @@ fun AppNavHost() {
                     composable(Destinations.HOME) { HomeScreen() }
                     composable(Destinations.LEARN) { LearnScreen() }
                     composable(Destinations.ANALYSE) { AnalyseScreen() }
+                    composable(Destinations.MYBAG) { MyBagScreen() }
                     composable(Destinations.SETTINGS) { SettingsScreen() }
                 }
             }
