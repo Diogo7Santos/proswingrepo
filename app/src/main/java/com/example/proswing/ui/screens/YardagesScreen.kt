@@ -13,124 +13,110 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proswing.viewmodel.MyBagViewModel
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
     val clubs by viewModel.clubs.collectAsState()
     val colors = MaterialTheme.colorScheme
 
-    // Match type of your entity's ID (likely Int)
     var selectedClubId by remember { mutableStateOf<Int?>(null) }
     var carryDistance by remember { mutableStateOf("") }
     var totalDistance by remember { mutableStateOf("") }
 
-    Scaffold(
-        containerColor = colors.background,
-        topBar = {
-            TopAppBar(
-                title = { Text("Yardages") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.primary,
-                    titleContentColor = colors.onPrimary
-                )
-            )
-        },
-        floatingActionButton = {
-            if (selectedClubId != null && carryDistance.isNotBlank() && totalDistance.isNotBlank()) {
-                FloatingActionButton(
-                    onClick = {
-                        // TODO: Save yardages for this club
-                        println("Saved: Club $selectedClubId, Carry $carryDistance, Total $totalDistance")
-                    }
-                ) { Text("✓") }
+    // Removed Scaffold + TopAppBar — uses the one from AppNavHost instead
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "Select a club and enter your yardages:",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (clubs.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No clubs found in My Bag.")
             }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Select a club from your bag and enter your yardages:",
-                style = MaterialTheme.typography.titleMedium,
-
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (clubs.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No clubs found in My Bag.")
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    items(clubs, key = { it.id }) { club ->
-                        val isSelected = selectedClubId == club.id
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 60.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected)
-                                    colors.primaryContainer
-                                else colors.surface
-                            ),
-                            onClick = {
-                                selectedClubId = if (isSelected) null else club.id
-                            }
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp)
-                            ) {
-                                Text("${club.type} ${club.variant ?: ""}".trim())
-                                Text("${club.brand} ${club.model}", style = MaterialTheme.typography.bodySmall)
-                            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(clubs, key = { it.id }) { club ->
+                    val isSelected = selectedClubId == club.id
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 60.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected)
+                                colors.primaryContainer
+                            else colors.surface
+                        ),
+                        onClick = {
+                            selectedClubId = if (isSelected) null else club.id
+                        }
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("${club.type} ${club.variant ?: ""}".trim())
+                            Text("${club.brand} ${club.model}", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
+            }
 
-                if (selectedClubId != null) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Divider()
-                    Spacer(modifier = Modifier.height(16.dp))
+            if (selectedClubId != null) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Divider()
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "Enter yardages for selected club:",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                Text(
+                    text = "Enter yardages for selected club:",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedTextField(
-                        value = carryDistance,
-                        onValueChange = { carryDistance = it },
-                        label = { Text("Average Carry Distance (yards)") },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                OutlinedTextField(
+                    value = carryDistance,
+                    onValueChange = { carryDistance = it },
+                    label = { Text("Average Carry Distance (yards)") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedTextField(
-                        value = totalDistance,
-                        onValueChange = { totalDistance = it },
-                        label = { Text("Total Distance (yards)") },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                OutlinedTextField(
+                    value = totalDistance,
+                    onValueChange = { totalDistance = it },
+                    label = { Text("Total Distance (yards)") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        // TODO: Persist these yardages if desired
+                        println("Saved: Club $selectedClubId, Carry $carryDistance, Total $totalDistance")
+                        carryDistance = ""
+                        totalDistance = ""
+                        selectedClubId = null
+                    },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Save")
                 }
             }
         }
