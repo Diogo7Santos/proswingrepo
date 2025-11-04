@@ -9,4 +9,5 @@ object Destinations {
     const val HANDICAP = "handicap"
     const val SCORECARD = "scorecard"
     const val CADDIE = "caddie"
+    const val YARDAGES = "yardages"
 }

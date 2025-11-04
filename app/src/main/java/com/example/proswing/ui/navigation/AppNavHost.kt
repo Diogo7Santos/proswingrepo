@@ -22,7 +22,17 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+
 fun AppNavHost() {
+    val screenTitles = mapOf(
+        Destinations.HOME to "Home",
+        Destinations.LEARN to "Learn",
+        Destinations.ANALYSE to "Analyse",
+        Destinations.MYBAG to "My Bag",
+        Destinations.YARDAGES to "Yardages",
+        Destinations.SETTINGS to "Settings"
+    )
+
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -33,10 +43,11 @@ fun AppNavHost() {
         NavDrawerItem("Home", Destinations.HOME, R.drawable.ic_home, true),
         NavDrawerItem("Learn", Destinations.LEARN, R.drawable.ic_learn, true),
         NavDrawerItem("Analyse", Destinations.ANALYSE, R.drawable.ic_analyse, true),
-        NavDrawerItem("Caddie", Destinations.CADDIE, R.drawable.ic_mybag, true),
+        NavDrawerItem("Caddie", Destinations.CADDIE, R.drawable.ic_caddie, true),
         NavDrawerItem("Handicap", Destinations.HANDICAP, R.drawable.ic_hcp, true),
         NavDrawerItem("Scorecard", Destinations.SCORECARD, R.drawable.ic_scorecard, true),
         NavDrawerItem("My Bag", Destinations.MYBAG, R.drawable.ic_mybag, true),
+        NavDrawerItem("Distances", Destinations.YARDAGES, R.drawable.ic_yardages, isSvg = true),
         NavDrawerItem("Settings", Destinations.SETTINGS, null, false)
     )
 
@@ -105,7 +116,12 @@ fun AppNavHost() {
             topBar = {
                 Column {
                     TopAppBar(
-                        title = { Text("ProSwing") },
+                        title = {
+                            Text(
+                                text = screenTitles[currentRoute] ?: "ProSwing",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
                         navigationIcon = {
                             IconButton(onClick = { scope.launch { drawerState.open() } }) {
                                 Icon(Icons.Default.Menu, contentDescription = "Menu")
@@ -137,6 +153,7 @@ fun AppNavHost() {
                     composable(Destinations.HANDICAP) { HandicapScreen() }
                     composable(Destinations.SCORECARD) { ScorecardScreen() }
                     composable(Destinations.MYBAG) { MyBagScreen() }
+                    composable(Destinations.YARDAGES) { YardagesScreen() }
                     composable(Destinations.SETTINGS) { SettingsScreen() }
                 }
             }
