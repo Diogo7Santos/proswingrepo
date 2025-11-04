@@ -22,7 +22,7 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
     var carryDistance by remember { mutableStateOf("") }
     var totalDistance by remember { mutableStateOf("") }
 
-    // Removed Scaffold + TopAppBar — uses the one from AppNavHost instead
+    // Removed Scaffold + TopAppBar — handled by AppNavHost
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -64,7 +64,19 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text("${club.type} ${club.variant ?: ""}".trim())
-                            Text("${club.brand} ${club.model}", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "${club.brand} ${club.model}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+
+                            // ✅ Show saved yardages if available
+                            if (club.carryDistance != null && club.totalDistance != null) {
+                                Text(
+                                    "Carry: ${club.carryDistance} yd | Total: ${club.totalDistance} yd",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
@@ -108,8 +120,11 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
 
                 Button(
                     onClick = {
-                        // TODO: Persist these yardages if desired
-                        println("Saved: Club $selectedClubId, Carry $carryDistance, Total $totalDistance")
+                        viewModel.updateYardages(
+                            clubId = selectedClubId!!,
+                            carry = carryDistance.toIntOrNull(),
+                            total = totalDistance.toIntOrNull()
+                        )
                         carryDistance = ""
                         totalDistance = ""
                         selectedClubId = null

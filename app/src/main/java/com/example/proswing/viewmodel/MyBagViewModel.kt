@@ -33,6 +33,12 @@ class MyBagViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateYardages(clubId: Int, carry: Int?, total: Int?) {
+        viewModelScope.launch {
+            dao.updateYardages(clubId, carry, total)
+        }
+    }
+
     fun deleteClub(club: GolfClubEntity) {
         viewModelScope.launch {
             dao.deleteClub(club)

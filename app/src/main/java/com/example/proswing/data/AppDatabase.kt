@@ -5,8 +5,13 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [GolfClubEntity::class], version = 1)
+@Database(
+    entities = [GolfClubEntity::class],
+    version = 2, // ⬅️ Bump version since we added new columns
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
+
     abstract fun golfClubDao(): GolfClubDao
 
     companion object {
@@ -19,7 +24,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "proswing_db"
-                ).build()
+                )
+                    // Automatically rebuilds the DB if schema changed
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

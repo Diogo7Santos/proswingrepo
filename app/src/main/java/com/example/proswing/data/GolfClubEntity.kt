@@ -10,5 +10,7 @@ data class GolfClubEntity(
     val type: String,
     val variant: String?,
     val brand: String,
-    val model: String
+    val model: String,
+    val carryDistance: Int? = null,
+    val totalDistance: Int? = null
 )

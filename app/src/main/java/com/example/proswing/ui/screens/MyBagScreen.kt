@@ -154,6 +154,16 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                                     )
                                     Text("Brand: ${club.brand}")
                                     Text("Model: ${club.model}")
+
+                                    // ✅ Show saved yardages if available
+                                    if (club.carryDistance != null && club.totalDistance != null) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            "Carry: ${club.carryDistance} yd  |  Total: ${club.totalDistance} yd",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             }
                         }
