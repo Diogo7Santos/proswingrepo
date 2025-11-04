@@ -10,7 +10,8 @@ import kotlinx.coroutines.launch
 data class UserSettings(
     val useMeters: Boolean = false,
     val useCelsius: Boolean = true,
-    val darkTheme: Boolean = false
+    val darkTheme: Boolean = false,
+    val handicap: Int = 25 // ✅ Default handicap (Casual Player)
 )
 
 class SettingsViewModel(
@@ -26,16 +27,21 @@ class SettingsViewModel(
 
     // Distance unit (yards/meters)
     fun setUseMeters(value: Boolean) {
-        viewModelScope.launch { repo.setUseMeters(value) }
+        viewModelScope.launch { repo.updateUseMeters(value) }
     }
 
     // Temperature unit (C/F)
     fun setUseCelsius(value: Boolean) {
-        viewModelScope.launch { repo.setUseCelsius(value) }
+        viewModelScope.launch { repo.updateUseCelsius(value) }
     }
 
     // Theme (light/dark)
     fun setDarkTheme(value: Boolean) {
-        viewModelScope.launch { repo.setDarkTheme(value) }
+        viewModelScope.launch { repo.updateDarkTheme(value) }
+    }
+
+    // ✅ Handicap
+    fun setHandicap(value: Int) {
+        viewModelScope.launch { repo.updateHandicap(value) }
     }
 }

@@ -108,5 +108,60 @@ fun SettingsScreen(
                 )
             }
         }
+
+        Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+
+        // 🏌️ Handicap Section
+        var expanded by remember { mutableStateOf(false) }
+        val handicapLevels = listOf(
+            "Beginner (40)" to 40,
+            "Casual (25)" to 25,
+            "Frequent (15)" to 15,
+            "Semi-Pro (5)" to 5,
+            "Pro (0)" to 0
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                "Handicap",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                TextField(
+                    readOnly = true,
+                    value = "Current: ${settings.handicap}",
+                    onValueChange = {},
+                    label = { Text("Select Handicap Level") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    handicapLevels.forEach { (label, value) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                scope.launch {
+                                    settingsViewModel.setHandicap(value)
+                                }
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
