@@ -18,60 +18,95 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val settings by settingsViewModel.settings.collectAsState()
 
-    // Removed the TopAppBar, since AppNavHost already handles it
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 16.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        Text("Units", style = MaterialTheme.typography.titleMedium)
-
-        // Distance units
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Distance (Yards / Meters)")
-            Switch(
-                checked = settings.useMeters,
-                onCheckedChange = {
-                    scope.launch { settingsViewModel.setUseMeters(it) }
-                }
+        // 🧭 Units Section
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(
+                "Units",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
             )
+
+            // Distance Units
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    Text("Distance Units", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        if (settings.useMeters) "Currently using Meters" else "Currently using Yards",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = settings.useMeters,
+                    onCheckedChange = {
+                        scope.launch { settingsViewModel.setUseMeters(it) }
+                    }
+                )
+            }
+
+            // Temperature Units
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    Text("Temperature Units", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        if (settings.useCelsius) "Currently using Celsius" else "Currently using Fahrenheit",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = settings.useCelsius,
+                    onCheckedChange = {
+                        scope.launch { settingsViewModel.setUseCelsius(it) }
+                    }
+                )
+            }
         }
 
-        // Temperature units
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Temperature (°C / °F)")
-            Switch(
-                checked = settings.useCelsius,
-                onCheckedChange = {
-                    scope.launch { settingsViewModel.setUseCelsius(it) }
-                }
-            )
-        }
+        Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
 
-        Divider()
-
-        Text("Theme", style = MaterialTheme.typography.titleMedium)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Dark Theme")
-            Switch(
-                checked = settings.darkTheme,
-                onCheckedChange = {
-                    scope.launch { settingsViewModel.setDarkTheme(it) }
-                }
+        // 🌗 Theme Section
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(
+                "Appearance",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
             )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    Text("Dark Theme", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        if (settings.darkTheme) "Dark mode enabled" else "Light mode enabled",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = settings.darkTheme,
+                    onCheckedChange = {
+                        scope.launch { settingsViewModel.setDarkTheme(it) }
+                    }
+                )
+            }
         }
     }
 }

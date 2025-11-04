@@ -2,7 +2,9 @@ package com.example.proswing.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
+import com.example.proswing.data.SettingsRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class UserSettings(
@@ -15,21 +17,25 @@ class SettingsViewModel(
     private val repo: SettingsRepository = SettingsRepository()
 ) : ViewModel() {
 
-    val settings = repo.settings.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        UserSettings()
+    // Expose current settings as a StateFlow
+    val settings = repo.settingsFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = repo.defaultSettings
     )
 
-    fun setUseMeters(value: Boolean) = viewModelScope.launch {
-        repo.updateUseMeters(value)
+    // Distance unit (yards/meters)
+    fun setUseMeters(value: Boolean) {
+        viewModelScope.launch { repo.setUseMeters(value) }
     }
 
-    fun setUseCelsius(value: Boolean) = viewModelScope.launch {
-        repo.updateUseCelsius(value)
+    // Temperature unit (C/F)
+    fun setUseCelsius(value: Boolean) {
+        viewModelScope.launch { repo.setUseCelsius(value) }
     }
 
-    fun setDarkTheme(value: Boolean) = viewModelScope.launch {
-        repo.updateDarkTheme(value)
+    // Theme (light/dark)
+    fun setDarkTheme(value: Boolean) {
+        viewModelScope.launch { repo.setDarkTheme(value) }
     }
 }

@@ -1,39 +1,61 @@
-package com.example.proswing.viewmodel
+package com.example.proswing.data
 
 import android.content.Context
-import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.Flow
-import com.example.proswing.ProSwingApp // your Application class, or use a context provider
+import kotlinx.coroutines.flow.map
+import com.example.proswing.ProSwingApp
+import com.example.proswing.viewmodel.UserSettings
 
-private val Context.dataStore by preferencesDataStore("user_settings")
+// Create a single DataStore instance scoped to the application
+private val Context.dataStore by preferencesDataStore(name = "user_settings")
 
-class SettingsRepository(private val context: Context = ProSwingApp.appContext) {
-
+class SettingsRepository(
+    private val context: Context = ProSwingApp.appContext
+) {
+    // Preference keys
     private object Keys {
         val USE_METERS = booleanPreferencesKey("use_meters")
         val USE_CELSIUS = booleanPreferencesKey("use_celsius")
         val DARK_THEME = booleanPreferencesKey("dark_theme")
     }
 
-    val settings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
+    // Default settings for initialization
+    val defaultSettings = UserSettings(
+        useMeters = false,
+        useCelsius = true,
+        darkTheme = false
+    )
+
+    // Flow of settings updates
+    val settingsFlow: Flow<UserSettings> = context.dataStore.data.map { prefs ->
         UserSettings(
-            useMeters = prefs[Keys.USE_METERS] ?: false,
-            useCelsius = prefs[Keys.USE_CELSIUS] ?: true,
-            darkTheme = prefs[Keys.DARK_THEME] ?: false
+            useMeters = prefs[Keys.USE_METERS] ?: defaultSettings.useMeters,
+            useCelsius = prefs[Keys.USE_CELSIUS] ?: defaultSettings.useCelsius,
+            darkTheme = prefs[Keys.DARK_THEME] ?: defaultSettings.darkTheme
         )
     }
 
-    suspend fun updateUseMeters(value: Boolean) {
-        context.dataStore.edit { it[Keys.USE_METERS] = value }
+    // Update distance unit
+    suspend fun setUseMeters(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.USE_METERS] = value
+        }
     }
 
-    suspend fun updateUseCelsius(value: Boolean) {
-        context.dataStore.edit { it[Keys.USE_CELSIUS] = value }
+    // Update temperature unit
+    suspend fun setUseCelsius(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.USE_CELSIUS] = value
+        }
     }
 
-    suspend fun updateDarkTheme(value: Boolean) {
-        context.dataStore.edit { it[Keys.DARK_THEME] = value }
+    // Update theme mode
+    suspend fun setDarkTheme(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.DARK_THEME] = value
+        }
     }
 }

@@ -12,24 +12,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proswing.viewmodel.MyBagViewModel
+import com.example.proswing.viewmodel.SettingsViewModel
 
 @Composable
-fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
-    val clubs by viewModel.clubs.collectAsState()
+fun YardagesScreen(
+    bagViewModel: MyBagViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel()
+) {
+    val clubs by bagViewModel.clubs.collectAsState()
+    val settings by settingsViewModel.settings.collectAsState()
+
     val colors = MaterialTheme.colorScheme
+    val distanceUnit = if (settings.useMeters) "m" else "yd"
 
     var selectedClubId by remember { mutableStateOf<Int?>(null) }
     var carryDistance by remember { mutableStateOf("") }
     var totalDistance by remember { mutableStateOf("") }
 
-    // Removed Scaffold + TopAppBar — handled by AppNavHost
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
     ) {
+        // ✅ Title
         Text(
-            text = "Select a club and enter your yardages:",
+            text = "Distances",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Select a club and enter your distances (${if (settings.useMeters) "meters" else "yards"}):",
             style = MaterialTheme.typography.titleMedium
         )
 
@@ -49,6 +63,13 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
             ) {
                 items(clubs, key = { it.id }) { club ->
                     val isSelected = selectedClubId == club.id
+                    val carryDisplay = club.carryDistance?.let {
+                        if (settings.useMeters) it / 1.094 else it
+                    }
+                    val totalDisplay = club.totalDistance?.let {
+                        if (settings.useMeters) it / 1.094 else it
+                    }
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -69,10 +90,12 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
                                 style = MaterialTheme.typography.bodySmall
                             )
 
-                            // ✅ Show saved yardages if available
-                            if (club.carryDistance != null && club.totalDistance != null) {
+                            if (carryDisplay != null && totalDisplay != null) {
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    "Carry: ${club.carryDistance} yd | Total: ${club.totalDistance} yd",
+                                    "Carry: %.1f %s  |  Total: %.1f %s".format(
+                                        carryDisplay, distanceUnit, totalDisplay, distanceUnit
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -88,7 +111,7 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Enter yardages for selected club:",
+                    text = "Enter distances for selected club ($distanceUnit):",
                     style = MaterialTheme.typography.titleMedium
                 )
 
@@ -97,7 +120,7 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
                 OutlinedTextField(
                     value = carryDistance,
                     onValueChange = { carryDistance = it },
-                    label = { Text("Average Carry Distance (yards)") },
+                    label = { Text("Average Carry Distance ($distanceUnit)") },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
                     ),
@@ -109,7 +132,7 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
                 OutlinedTextField(
                     value = totalDistance,
                     onValueChange = { totalDistance = it },
-                    label = { Text("Total Distance (yards)") },
+                    label = { Text("Total Distance ($distanceUnit)") },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
                     ),
@@ -120,11 +143,18 @@ fun YardagesScreen(viewModel: MyBagViewModel = viewModel()) {
 
                 Button(
                     onClick = {
-                        viewModel.updateYardages(
-                            clubId = selectedClubId!!,
-                            carry = carryDistance.toIntOrNull(),
-                            total = totalDistance.toIntOrNull()
-                        )
+                        val carry = carryDistance.toFloatOrNull()
+                        val total = totalDistance.toFloatOrNull()
+
+                        if (carry != null && total != null) {
+                            // ✅ Always store in YARDS internally
+                            val carryInYards = if (settings.useMeters) carry * 1.094f else carry
+                            val totalInYards = if (settings.useMeters) total * 1.094f else total
+
+                            bagViewModel.updateYardages(selectedClubId!!, carryInYards, totalInYards)
+                            println("Saved Club $selectedClubId: Carry $carryInYards yd | Total $totalInYards yd")
+                        }
+
                         carryDistance = ""
                         totalDistance = ""
                         selectedClubId = null

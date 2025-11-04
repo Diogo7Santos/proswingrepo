@@ -20,13 +20,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proswing.viewmodel.MyBagViewModel
+import com.example.proswing.viewmodel.SettingsViewModel
 import com.google.accompanist.flowlayout.FlowRow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
+fun MyBagScreen(
+    viewModel: MyBagViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel()
+) {
     val clubs by viewModel.clubs.collectAsState()
+    val settings by settingsViewModel.settings.collectAsState()
+
+    val distanceUnit = if (settings.useMeters) "m" else "yd"
     var showDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -84,7 +91,6 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                             }
                         )
 
-                        // progress value for swipe animation
                         val fraction = dismissState.progress
                         val iconAlpha by animateFloatAsState(
                             targetValue = fraction,
@@ -95,7 +101,6 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                             label = "iconScale"
                         )
 
-                        // Move icon horizontally as user swipes
                         val direction = dismissState.dismissDirection
                         val offsetX = when (direction) {
                             SwipeToDismissBoxValue.StartToEnd -> 120f * fraction
@@ -103,7 +108,6 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                             else -> 0f
                         }
 
-                        // Fade card when dismissed
                         val cardAlpha by animateFloatAsState(
                             targetValue = if (dismissState.targetValue != SwipeToDismissBoxValue.Settled) 0f else 1f,
                             label = "cardAlpha"
@@ -155,11 +159,18 @@ fun MyBagScreen(viewModel: MyBagViewModel = viewModel()) {
                                     Text("Brand: ${club.brand}")
                                     Text("Model: ${club.model}")
 
-                                    // ✅ Show saved yardages if available
+                                    // ✅ Show saved yardages with conversion
                                     if (club.carryDistance != null && club.totalDistance != null) {
+                                        val carryDisplay =
+                                            if (settings.useMeters) club.carryDistance / 1.094 else club.carryDistance
+                                        val totalDisplay =
+                                            if (settings.useMeters) club.totalDistance / 1.094 else club.totalDistance
+
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            "Carry: ${club.carryDistance} yd  |  Total: ${club.totalDistance} yd",
+                                            "Carry: %.1f %s  |  Total: %.1f %s".format(
+                                                carryDisplay, distanceUnit, totalDisplay, distanceUnit
+                                            ),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.primary
                                         )
@@ -241,7 +252,9 @@ fun AddClubDialog(onDismiss: () -> Unit, onAdd: (GolfClub) -> Unit) {
                         value = selectedBrand,
                         onValueChange = {},
                         label = { Text("Select Brand") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBrand) },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBrand)
+                        },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
                     ExposedDropdownMenu(

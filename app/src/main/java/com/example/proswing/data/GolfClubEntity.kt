@@ -11,6 +11,7 @@ data class GolfClubEntity(
     val variant: String?,
     val brand: String,
     val model: String,
-    val carryDistance: Int? = null,
-    val totalDistance: Int? = null
+    val carryDistance: Float? = null,   // <-- changed from Int? to Float?
+    val totalDistance: Float? = null    // <-- changed from Int? to Float?
 )
+
