@@ -23,7 +23,7 @@ class ScorecardViewModel(application: Application) : AndroidViewModel(applicatio
     val savedRounds = dao.getAllScorecards()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // ✅ Save a new round to the database
+    // Save a new round to the database
     fun saveRound(holes: List<Hole>, handicap: Int) {
         viewModelScope.launch {
             // Defensive check
@@ -42,6 +42,7 @@ class ScorecardViewModel(application: Application) : AndroidViewModel(applicatio
                 netScore = netScore,
                 toPar = toPar,
                 holes = holes.map { it.strokes ?: it.par },
+                pars = holes.map { it.par },
                 handicap = handicap
             )
 

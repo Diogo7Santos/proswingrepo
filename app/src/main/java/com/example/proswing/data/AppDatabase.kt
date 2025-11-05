@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [GolfClubEntity::class, ScorecardEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(ScorecardConverters::class)

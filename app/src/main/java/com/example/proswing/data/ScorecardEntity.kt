@@ -17,5 +17,6 @@ data class ScorecardEntity(
     val netScore: Int,
     val toPar: Int,
     val holes: List<Int>, // list of stroke counts
+    val pars: List<Int>,
     val handicap: Int
 )
