@@ -39,7 +39,7 @@ fun HandicapScreen(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ✅ Display current handicap
+        // Display current handicap
         Text(
             text = "Your Handicap: ${settings.handicap}",
             style = MaterialTheme.typography.headlineMedium,
@@ -48,7 +48,7 @@ fun HandicapScreen(
 
         Divider(thickness = 1.dp)
 
-        // 📝 Manual input first
+        // Manual input first
         Text(
             "Enter your custom handicap:",
             style = MaterialTheme.typography.titleMedium
@@ -77,7 +77,7 @@ fun HandicapScreen(
 
         Divider(thickness = 1.dp)
 
-        // 🧭 Then preset dropdown
+        // Then preset dropdown
         Text(
             "Or select your experience level:",
             style = MaterialTheme.typography.titleMedium

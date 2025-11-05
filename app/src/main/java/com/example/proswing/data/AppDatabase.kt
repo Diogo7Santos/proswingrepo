@@ -4,15 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
 @Database(
-    entities = [GolfClubEntity::class],
-    version = 2, // ⬅️ Bump version since we added new columns
+    entities = [GolfClubEntity::class, ScorecardEntity::class],
+    version = 3,
     exportSchema = false
 )
+@TypeConverters(ScorecardConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun golfClubDao(): GolfClubDao
+    abstract fun scorecardDao(): ScorecardDao
 
     companion object {
         @Volatile
@@ -25,7 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "proswing_db"
                 )
-                    // Automatically rebuilds the DB if schema changed
+                    // Automatically rebuilds DB if schema changes
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
