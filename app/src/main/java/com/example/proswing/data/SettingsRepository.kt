@@ -61,7 +61,7 @@ class SettingsRepository(
         }
     }
 
-    // ✅ Update handicap
+    // Update handicap
     suspend fun updateHandicap(value: Int) {
         context.dataStore.edit { prefs ->
             prefs[Keys.HANDICAP] = value

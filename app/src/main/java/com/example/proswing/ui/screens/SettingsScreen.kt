@@ -79,7 +79,7 @@ fun SettingsScreen(
 
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
 
-        // 🌗 Theme Section
+        // Theme Section
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(
                 "Appearance",
