@@ -1,5 +1,6 @@
 package com.example.proswing.ui.screens
 
+import android.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -84,7 +86,8 @@ fun ScorecardScreen(
             Text(
                 text = "Virtual Golf Scorecard",
                 style = MaterialTheme.typography.headlineSmall,
-                color = colors.primary
+                color = colors.onBackground,
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(Modifier.height(16.dp))
@@ -110,7 +113,7 @@ fun ScorecardScreen(
             Text(
                 text = "Saved Rounds",
                 style = MaterialTheme.typography.titleLarge,
-                color = colors.primary
+                color = colors.onBackground
             )
 
             Spacer(Modifier.height(8.dp))
@@ -242,7 +245,8 @@ fun ScoreHistory(rounds: List<ScorecardEntity>) {
                                             "${index + 1}",
                                             modifier = Modifier.weight(1f),
                                             textAlign = TextAlign.Center,
-                                            style = MaterialTheme.typography.bodySmall
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                 }
@@ -257,7 +261,7 @@ fun ScoreHistory(rounds: List<ScorecardEntity>) {
                                             modifier = Modifier.weight(1f),
                                             textAlign = TextAlign.Center,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                 }
@@ -272,7 +276,7 @@ fun ScoreHistory(rounds: List<ScorecardEntity>) {
                                             modifier = Modifier.weight(1f),
                                             textAlign = TextAlign.Center,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.primary
+                                            color = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                 }

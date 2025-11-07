@@ -43,7 +43,7 @@ fun HandicapScreen(
         Text(
             text = "Your Handicap: ${settings.handicap}",
             style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Divider(thickness = 1.dp)

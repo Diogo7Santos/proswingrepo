@@ -24,12 +24,12 @@ fun SettingsScreen(
             .padding(horizontal = 16.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        // 🧭 Units Section
+        // Units Section
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(
                 "Units",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             // Distance Units
@@ -84,7 +84,7 @@ fun SettingsScreen(
             Text(
                 "Appearance",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Row(
@@ -125,7 +125,7 @@ fun SettingsScreen(
             Text(
                 "Handicap",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             ExposedDropdownMenuBox(

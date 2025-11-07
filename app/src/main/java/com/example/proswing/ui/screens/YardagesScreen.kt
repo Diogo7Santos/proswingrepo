@@ -34,11 +34,11 @@ fun YardagesScreen(
             .fillMaxSize()
             .padding(16.dp),
     ) {
-        // ✅ Title
+        // Title
         Text(
             text = "Distances",
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -87,7 +87,8 @@ fun YardagesScreen(
                             Text("${club.type} ${club.variant ?: ""}".trim())
                             Text(
                                 "${club.brand} ${club.model}",
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onBackground
                             )
 
                             if (carryDisplay != null && totalDisplay != null) {
@@ -97,7 +98,7 @@ fun YardagesScreen(
                                         carryDisplay, distanceUnit, totalDisplay, distanceUnit
                                     ),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
                         }
@@ -147,7 +148,7 @@ fun YardagesScreen(
                         val total = totalDistance.toFloatOrNull()
 
                         if (carry != null && total != null) {
-                            // ✅ Always store in YARDS internally
+                            // Always store in YARDS internally
                             val carryInYards = if (settings.useMeters) carry * 1.094f else carry
                             val totalInYards = if (settings.useMeters) total * 1.094f else total
 
