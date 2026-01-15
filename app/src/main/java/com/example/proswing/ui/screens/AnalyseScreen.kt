@@ -15,6 +15,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import kotlin.math.max
 
 @Composable
 fun AnalyseScreen() {
@@ -32,10 +33,19 @@ fun AnalyseScreen() {
     // Create / manage ExoPlayer tied to the selected Uri
     val player = remember { mutableStateOf<ExoPlayer?>(null) }
 
+    // Step size used for "frame stepping" (approx 1 frame at 30fps)
+    val stepMs = 33L
+
+    fun stepBy(deltaMs: Long) {
+        val exo = player.value ?: return
+        exo.playWhenReady = false // pause to make stepping precise
+        val newPos = max(0L, exo.currentPosition + deltaMs)
+        exo.seekTo(newPos)
+    }
+
     // Whenever the selected uri changes, (re)build the player media item
     LaunchedEffect(selectedVideoUri) {
-        val uri = selectedVideoUri
-        if (uri == null) return@LaunchedEffect
+        val uri = selectedVideoUri ?: return@LaunchedEffect
 
         val existing = player.value
         if (existing != null) {
@@ -136,14 +146,42 @@ fun AnalyseScreen() {
                         }
                     },
                     update = { playerView ->
-                        // Keep the PlayerView bound to the current player instance
                         playerView.player = player.value
                     }
                 )
             }
 
+            // Frame-step controls
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = { stepBy(-stepMs) },
+                    enabled = player.value != null
+                ) {
+                    Text("◀ Frame back")
+                }
+
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = { stepBy(stepMs) },
+                    enabled = player.value != null
+                ) {
+                    Text("Frame forward ▶")
+                }
+            }
+
             Text(
                 text = "Selected: ${selectedVideoUri.toString()}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = "Tip: Frame step uses ~${stepMs}ms increments (approx 1 frame at ~30fps).",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
