@@ -10,4 +10,7 @@ object Destinations {
     const val SCORECARD = "scorecard"
     const val CADDIE = "caddie"
     const val YARDAGES = "yardages"
+
+    const val ANALYSE_EDITOR = "analyse_editor"
+
 }

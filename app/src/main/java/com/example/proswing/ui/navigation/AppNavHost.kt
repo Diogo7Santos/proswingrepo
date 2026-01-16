@@ -22,7 +22,6 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun AppNavHost() {
     val screenTitles = mapOf(
         Destinations.HOME to "Home",
@@ -30,7 +29,8 @@ fun AppNavHost() {
         Destinations.ANALYSE to "Analyse",
         Destinations.MYBAG to "My Bag",
         Destinations.YARDAGES to "Yardages",
-        Destinations.SETTINGS to "Settings"
+        Destinations.SETTINGS to "Settings",
+        Destinations.ANALYSE_EDITOR to "Analyse Editor"
     )
 
     val navController = rememberNavController()
@@ -148,7 +148,16 @@ fun AppNavHost() {
                 ) {
                     composable(Destinations.HOME) { HomeScreen() }
                     composable(Destinations.LEARN) { LearnScreen() }
-                    composable(Destinations.ANALYSE) { AnalyseScreen() }
+
+                    // UPDATED: AnalyseScreen now receives a callback that navigates to AnalyseEditorScreen
+                    composable(Destinations.ANALYSE) {
+                        AnalyseScreen(
+                            onAnalyseClick = { navController.navigate(Destinations.ANALYSE_EDITOR) }
+                        )
+                    }
+
+                    composable(Destinations.ANALYSE_EDITOR) { AnalyseEditorScreen() }
+
                     composable(Destinations.CADDIE) { CaddieScreen() }
                     composable(Destinations.HANDICAP) { HandicapScreen() }
                     composable(Destinations.SCORECARD) { ScorecardScreen() }

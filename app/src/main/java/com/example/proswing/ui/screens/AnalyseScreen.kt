@@ -28,13 +28,13 @@ import kotlinx.coroutines.withContext
 import kotlin.math.max
 
 @Composable
-fun AnalyseScreen() {
+fun AnalyseScreen(
+    onAnalyseClick: () -> Unit = {} // Hook for navigation (you will wire this in AppNavHost)
+) {
     val context = LocalContext.current
 
-    // Holds the selected video Uri
     var selectedVideoUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Gallery picker (video only)
     val pickVideoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
@@ -42,10 +42,9 @@ fun AnalyseScreen() {
         }
     )
 
-    // Player instance
     val playerState = remember { mutableStateOf<ExoPlayer?>(null) }
 
-    // Step size for "frame stepping" (approx 1 frame at 30fps)
+    // ~1 frame at 30fps. You can change to 16L for 60fps videos.
     val stepMs = 33L
 
     val scope = rememberCoroutineScope()
@@ -53,12 +52,11 @@ fun AnalyseScreen() {
 
     fun stepBy(deltaMs: Long) {
         val exo = playerState.value ?: return
-        exo.playWhenReady = false // pause to make stepping more precise
+        exo.playWhenReady = false
         val newPos = max(0L, exo.currentPosition + deltaMs)
         exo.seekTo(newPos)
     }
 
-    // When URI changes, load it into the existing player (if created)
     LaunchedEffect(selectedVideoUri) {
         val uri = selectedVideoUri ?: return@LaunchedEffect
         val exo = playerState.value ?: return@LaunchedEffect
@@ -68,7 +66,6 @@ fun AnalyseScreen() {
         exo.playWhenReady = true
     }
 
-    // Release player when leaving the screen
     DisposableEffect(Unit) {
         onDispose {
             playerState.value?.release()
@@ -86,9 +83,7 @@ fun AnalyseScreen() {
             try {
                 retriever.setDataSource(context, videoUri)
 
-                // MediaMetadataRetriever uses microseconds
                 val timeUs = positionMs * 1000L
-
                 val bitmap: Bitmap? = retriever.getFrameAtTime(
                     timeUs,
                     MediaMetadataRetriever.OPTION_CLOSEST
@@ -145,12 +140,9 @@ fun AnalyseScreen() {
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "Analyse",
-                style = MaterialTheme.typography.headlineMedium
-            )
+            // Removed the big "Analyse" title so the player has more space.
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -190,11 +182,10 @@ fun AnalyseScreen() {
                     )
                 }
             } else {
-                // Player container
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(260.dp),
+                        .height(320.dp), // slightly bigger now that we removed the title
                     shape = MaterialTheme.shapes.large
                 ) {
                     AndroidView(
@@ -202,8 +193,6 @@ fun AnalyseScreen() {
                         factory = { ctx ->
                             val exo = ExoPlayer.Builder(ctx).build().also { exoPlayer ->
                                 playerState.value = exoPlayer
-
-                                // Load media immediately on creation
                                 selectedVideoUri?.let { uri ->
                                     exoPlayer.setMediaItem(MediaItem.fromUri(uri))
                                     exoPlayer.prepare()
@@ -226,7 +215,6 @@ fun AnalyseScreen() {
                     )
                 }
 
-                // Frame-step controls
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -249,7 +237,6 @@ fun AnalyseScreen() {
                     }
                 }
 
-                // Save frame button
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = playerState.value != null && selectedVideoUri != null,
@@ -257,10 +244,9 @@ fun AnalyseScreen() {
                         val exo = playerState.value ?: return@Button
                         val uri = selectedVideoUri ?: return@Button
 
-                        // Pause so the captured frame matches what user sees more closely
                         exo.playWhenReady = false
-
                         val positionMs = exo.currentPosition
+
                         scope.launch {
                             val saved = saveCurrentFrameToGallery(context, uri, positionMs)
                             if (saved != null) {
@@ -274,11 +260,14 @@ fun AnalyseScreen() {
                     Text("Save current frame as picture")
                 }
 
-                Text(
-                    text = "Selected: ${selectedVideoUri.toString()}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // New Analyse button -> navigates to AnalyseEditorScreen
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = true,
+                    onClick = onAnalyseClick
+                ) {
+                    Text("Analyse")
+                }
 
                 Text(
                     text = "Tip: Frame step uses ~${stepMs}ms increments (approx 1 frame at ~30fps).",
