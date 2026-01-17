@@ -419,116 +419,150 @@ fun AnalyseEditorScreen(
                             style = MaterialTheme.typography.bodyLarge
                         )
                     } else {
-                        Card(
+                        // WRAP: put the visibility button ABOVE the card
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .fillMaxHeight(0.92f),
-                            shape = MaterialTheme.shapes.large
+                                .fillMaxHeight(0.92f)
                         ) {
-                            // IMPORTANT: clip here so the whole editor behaves like your old version
-                            Box(
+                            // Visibility toggle row (top-right) ABOVE the editor card
+                            Row(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(MaterialTheme.shapes.large)
-                                    .onSizeChanged { editorSizePx = it }
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                horizontalArrangement = Arrangement.End
                             ) {
-                                val bmp = selectedBitmap
-                                if (bmp == null) {
-                                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        CircularProgressIndicator()
-                                    }
-                                } else {
-                                    // HIDE/SHOW tools button (top-right)
-                                    IconButton(
-                                        onClick = { toolsVisible = !toolsVisible },
-                                        modifier = Modifier
-                                            .align(Alignment.TopEnd)
-                                            .padding(6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = if (toolsVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                            contentDescription = if (toolsVisible) "Hide tools" else "Show tools"
-                                        )
-                                    }
+                                IconButton(onClick = { toolsVisible = !toolsVisible }) {
+                                    Icon(
+                                        imageVector = if (toolsVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (toolsVisible) "Hide tools" else "Show tools"
+                                    )
+                                }
+                            }
 
-                                    // --- IMAGE layer: ONLY this receives transform gestures when cropMode is true ---
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .pointerInput(selectedFrame, cropMode) {
-                                                if (!cropMode) return@pointerInput
-                                                detectTransformGestures { _, pan, zoom, _ ->
-                                                    scale = (scale * zoom).coerceIn(1f, 6f)
-                                                    offsetX += pan.x
-                                                    offsetY += pan.y
-                                                }
-                                            }
-                                    ) {
-                                        Canvas(modifier = Modifier.fillMaxSize()) {
-                                            drawContext.canvas.nativeCanvas.apply {
-                                                val canvasW = size.width
-                                                val canvasH = size.height
-
-                                                val srcW = bmp.width.toFloat()
-                                                val srcH = bmp.height.toFloat()
-
-                                                val baseScale = min(canvasW / srcW, canvasH / srcH)
-                                                val drawnW = srcW * baseScale
-                                                val drawnH = srcH * baseScale
-                                                val baseTx = (canvasW - drawnW) / 2f
-                                                val baseTy = (canvasH - drawnH) / 2f
-
-                                                val cx = canvasW / 2f
-                                                val cy = canvasH / 2f
-
-                                                val m = Matrix()
-                                                m.postScale(baseScale, baseScale)
-                                                m.postTranslate(baseTx, baseTy)
-
-                                                // zoom about center
-                                                m.postTranslate(-cx, -cy)
-                                                m.postScale(scale, scale)
-                                                m.postTranslate(cx, cy)
-
-                                                // pan
-                                                m.postTranslate(offsetX, offsetY)
-
-                                                drawBitmap(bmp, m, null)
-                                            }
+                            Card(
+                                modifier = Modifier.fillMaxSize(),
+                                shape = MaterialTheme.shapes.large
+                            ) {
+                                // IMPORTANT: clip here so the whole editor behaves like your old version
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(MaterialTheme.shapes.large)
+                                        .onSizeChanged { editorSizePx = it }
+                                ) {
+                                    val bmp = selectedBitmap
+                                    if (bmp == null) {
+                                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                            CircularProgressIndicator()
                                         }
-                                    }
-
-                                    // --- TEMPLATE overlay: never intercept touches ---
-                                    if (templateEnabled) {
-                                        val resId = when (selectedPerspective) {
-                                            "Down-the-line" -> com.example.proswing.R.drawable.setup_template_dtl
-                                            "Face-on" -> com.example.proswing.R.drawable.setup_template_fo
-                                            else -> null
-                                        }
-                                        if (resId != null) {
-                                            androidx.compose.foundation.Image(
-                                                painter = androidx.compose.ui.res.painterResource(id = resId),
-                                                contentDescription = "Template overlay",
-                                                modifier = Modifier.fillMaxSize(),
-                                                alpha = 0.25f
-                                            )
-                                        }
-                                    }
-
-                                    // --- LINES overlay ---
-                                    // CRITICAL FIX:
-                                    // Don't keep a full-size pointerInput layer on top when cropMode is ON.
-                                    // We conditionally add pointerInput only when cropMode is OFF.
-                                    if (!cropMode) {
+                                    } else {
+                                        // --- IMAGE layer: ONLY this receives transform gestures when cropMode is true ---
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxSize()
-                                                .pointerInput(lines) {
-                                                    detectTapGestures { tap ->
-                                                        selectedLineId = pickLineAt(tap)
+                                                .pointerInput(selectedFrame, cropMode) {
+                                                    if (!cropMode) return@pointerInput
+                                                    detectTransformGestures { _, pan, zoom, _ ->
+                                                        scale = (scale * zoom).coerceIn(1f, 6f)
+                                                        offsetX += pan.x
+                                                        offsetY += pan.y
                                                     }
                                                 }
                                         ) {
+                                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                                drawContext.canvas.nativeCanvas.apply {
+                                                    val canvasW = size.width
+                                                    val canvasH = size.height
+
+                                                    val srcW = bmp.width.toFloat()
+                                                    val srcH = bmp.height.toFloat()
+
+                                                    val baseScale = min(canvasW / srcW, canvasH / srcH)
+                                                    val drawnW = srcW * baseScale
+                                                    val drawnH = srcH * baseScale
+                                                    val baseTx = (canvasW - drawnW) / 2f
+                                                    val baseTy = (canvasH - drawnH) / 2f
+
+                                                    val cx = canvasW / 2f
+                                                    val cy = canvasH / 2f
+
+                                                    val m = Matrix()
+                                                    m.postScale(baseScale, baseScale)
+                                                    m.postTranslate(baseTx, baseTy)
+
+                                                    // zoom about center
+                                                    m.postTranslate(-cx, -cy)
+                                                    m.postScale(scale, scale)
+                                                    m.postTranslate(cx, cy)
+
+                                                    // pan
+                                                    m.postTranslate(offsetX, offsetY)
+
+                                                    drawBitmap(bmp, m, null)
+                                                }
+                                            }
+                                        }
+
+                                        // --- TEMPLATE overlay: never intercept touches ---
+                                        if (templateEnabled) {
+                                            val resId = when (selectedPerspective) {
+                                                "Down-the-line" -> com.example.proswing.R.drawable.setup_template_dtl
+                                                "Face-on" -> com.example.proswing.R.drawable.setup_template_fo
+                                                else -> null
+                                            }
+                                            if (resId != null) {
+                                                androidx.compose.foundation.Image(
+                                                    painter = androidx.compose.ui.res.painterResource(id = resId),
+                                                    contentDescription = "Template overlay",
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    alpha = 0.25f
+                                                )
+                                            }
+                                        }
+
+                                        // --- LINES overlay ---
+                                        // CRITICAL FIX:
+                                        // Don't keep a full-size pointerInput layer on top when cropMode is ON.
+                                        // We conditionally add pointerInput only when cropMode is OFF.
+                                        if (!cropMode) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .pointerInput(lines) {
+                                                        detectTapGestures { tap ->
+                                                            selectedLineId = pickLineAt(tap)
+                                                        }
+                                                    }
+                                            ) {
+                                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                                    for (line in lines) {
+                                                        val rad = Math.toRadians(line.rotationDeg.toDouble())
+                                                        val dx = (cos(rad) * (line.lengthPx / 2f)).toFloat()
+                                                        val dy = (sin(rad) * (line.lengthPx / 2f)).toFloat()
+                                                        val p1 = Offset(line.centerX - dx, line.centerY - dy)
+                                                        val p2 = Offset(line.centerX + dx, line.centerY + dy)
+
+                                                        drawLine(
+                                                            color = Color(line.colorArgb),
+                                                            start = p1,
+                                                            end = p2,
+                                                            strokeWidth = line.strokePx,
+                                                            cap = StrokeCap.Round
+                                                        )
+
+                                                        if (line.id == selectedLineId) {
+                                                            drawCircle(
+                                                                color = Color(line.colorArgb),
+                                                                radius = max(10f, line.strokePx * 1.2f),
+                                                                center = Offset(line.centerX, line.centerY)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            // cropMode ON: draw only (no pointerInput)
                                             Canvas(modifier = Modifier.fillMaxSize()) {
                                                 for (line in lines) {
                                                     val rad = Math.toRadians(line.rotationDeg.toDouble())
@@ -555,160 +589,133 @@ fun AnalyseEditorScreen(
                                                 }
                                             }
                                         }
-                                    } else {
-                                        // cropMode ON: draw only (no pointerInput)
-                                        Canvas(modifier = Modifier.fillMaxSize()) {
-                                            for (line in lines) {
-                                                val rad = Math.toRadians(line.rotationDeg.toDouble())
-                                                val dx = (cos(rad) * (line.lengthPx / 2f)).toFloat()
-                                                val dy = (sin(rad) * (line.lengthPx / 2f)).toFloat()
-                                                val p1 = Offset(line.centerX - dx, line.centerY - dy)
-                                                val p2 = Offset(line.centerX + dx, line.centerY + dy)
 
-                                                drawLine(
-                                                    color = Color(line.colorArgb),
-                                                    start = p1,
-                                                    end = p2,
-                                                    strokeWidth = line.strokePx,
-                                                    cap = StrokeCap.Round
-                                                )
-
-                                                if (line.id == selectedLineId) {
-                                                    drawCircle(
-                                                        color = Color(line.colorArgb),
-                                                        radius = max(10f, line.strokePx * 1.2f),
-                                                        center = Offset(line.centerX, line.centerY)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // --- TOOLBOX (scrollable) ---
-                                    if (toolsVisible) {
-                                        Card(
-                                            modifier = Modifier
-                                                .align(Alignment.CenterEnd)
-                                                .padding(10.dp)
-                                                .width(170.dp)
-                                                .heightIn(max = 520.dp),
-                                            shape = RoundedCornerShape(18.dp)
-                                        ) {
-                                            LazyColumn(
+                                        // --- TOOLBOX (scrollable) ---
+                                        if (toolsVisible) {
+                                            Card(
                                                 modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .padding(10.dp),
-                                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                                                    .align(Alignment.CenterEnd)
+                                                    .padding(10.dp)
+                                                    .width(170.dp)
+                                                    .heightIn(max = 520.dp),
+                                                shape = RoundedCornerShape(18.dp)
                                             ) {
-                                                item { Text("Tools", style = MaterialTheme.typography.titleSmall) }
+                                                LazyColumn(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(10.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                                ) {
+                                                    item { Text("Tools", style = MaterialTheme.typography.titleSmall) }
 
-                                                item {
-                                                    OutlinedButton(
-                                                        onClick = { cropMode = !cropMode },
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        enabled = selectedFrame != null
-                                                    ) {
-                                                        Text(if (cropMode) "Crop: ON" else "Crop: OFF")
+                                                    item {
+                                                        OutlinedButton(
+                                                            onClick = { cropMode = !cropMode },
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            enabled = selectedFrame != null
+                                                        ) {
+                                                            Text(if (cropMode) "Crop: ON" else "Crop: OFF")
+                                                        }
                                                     }
-                                                }
 
-                                                item {
-                                                    Button(
-                                                        onClick = { addLine() },
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        enabled = editorSizePx.width > 0 && editorSizePx.height > 0
-                                                    ) { Text("Add line") }
-                                                }
-
-                                                item {
-                                                    OutlinedButton(
-                                                        onClick = {
-                                                            templateEnabled = !templateEnabled
-                                                            cropMode = false
-                                                        },
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        enabled = selectedPerspective != null
-                                                    ) {
-                                                        Text(if (templateEnabled) "Template: ON" else "Template: OFF")
+                                                    item {
+                                                        Button(
+                                                            onClick = { addLine() },
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            enabled = editorSizePx.width > 0 && editorSizePx.height > 0
+                                                        ) { Text("Add line") }
                                                     }
-                                                }
 
-                                                val sel = selectedLine()
-                                                if (sel != null) {
                                                     item {
                                                         OutlinedButton(
                                                             onClick = {
-                                                                val idx = lineColors.indexOf(sel.colorArgb).let { if (it < 0) 0 else it }
-                                                                val next = lineColors[(idx + 1) % lineColors.size]
-                                                                updateSelectedLine { it.copy(colorArgb = next) }
+                                                                templateEnabled = !templateEnabled
                                                                 cropMode = false
                                                             },
-                                                            modifier = Modifier.fillMaxWidth()
-                                                        ) { Text("Line colour") }
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            enabled = selectedPerspective != null
+                                                        ) {
+                                                            Text(if (templateEnabled) "Template: ON" else "Template: OFF")
+                                                        }
                                                     }
 
-                                                    item { Text("Move X", style = MaterialTheme.typography.labelSmall) }
-                                                    item {
-                                                        val maxX = editorSizePx.width.toFloat().coerceAtLeast(1f)
-                                                        Slider(
-                                                            value = sel.centerX.coerceIn(0f, maxX),
-                                                            onValueChange = { v ->
-                                                                updateSelectedLine { it.copy(centerX = v.coerceIn(0f, maxX)) }
-                                                            },
-                                                            valueRange = 0f..maxX
-                                                        )
+                                                    val sel = selectedLine()
+                                                    if (sel != null) {
+                                                        item {
+                                                            OutlinedButton(
+                                                                onClick = {
+                                                                    val idx = lineColors.indexOf(sel.colorArgb).let { if (it < 0) 0 else it }
+                                                                    val next = lineColors[(idx + 1) % lineColors.size]
+                                                                    updateSelectedLine { it.copy(colorArgb = next) }
+                                                                    cropMode = false
+                                                                },
+                                                                modifier = Modifier.fillMaxWidth()
+                                                            ) { Text("Line colour") }
+                                                        }
+
+                                                        item { Text("Move X", style = MaterialTheme.typography.labelSmall) }
+                                                        item {
+                                                            val maxX = editorSizePx.width.toFloat().coerceAtLeast(1f)
+                                                            Slider(
+                                                                value = sel.centerX.coerceIn(0f, maxX),
+                                                                onValueChange = { v ->
+                                                                    updateSelectedLine { it.copy(centerX = v.coerceIn(0f, maxX)) }
+                                                                },
+                                                                valueRange = 0f..maxX
+                                                            )
+                                                        }
+
+                                                        item { Text("Move Y", style = MaterialTheme.typography.labelSmall) }
+                                                        item {
+                                                            val maxY = editorSizePx.height.toFloat().coerceAtLeast(1f)
+                                                            Slider(
+                                                                value = sel.centerY.coerceIn(0f, maxY),
+                                                                onValueChange = { v ->
+                                                                    updateSelectedLine { it.copy(centerY = v.coerceIn(0f, maxY)) }
+                                                                },
+                                                                valueRange = 0f..maxY
+                                                            )
+                                                        }
+
+                                                        item { Text("Rotate", style = MaterialTheme.typography.labelSmall) }
+                                                        item {
+                                                            Slider(
+                                                                value = sel.rotationDeg,
+                                                                onValueChange = { v -> updateSelectedLine { it.copy(rotationDeg = v) } },
+                                                                valueRange = -180f..180f
+                                                            )
+                                                        }
+
+                                                        item { Text("Length", style = MaterialTheme.typography.labelSmall) }
+                                                        item {
+                                                            Slider(
+                                                                value = sel.lengthPx,
+                                                                onValueChange = { v ->
+                                                                    updateSelectedLine { it.copy(lengthPx = v.coerceIn(80f, 2000f)) }
+                                                                },
+                                                                valueRange = 80f..2000f
+                                                            )
+                                                        }
+
+                                                        item {
+                                                            OutlinedButton(
+                                                                onClick = { deleteSelectedLine() },
+                                                                modifier = Modifier.fillMaxWidth()
+                                                            ) { Text("Delete") }
+                                                        }
+                                                    } else {
+                                                        item {
+                                                            Text(
+                                                                text = if (cropMode) "Crop mode: pinch + pan image"
+                                                                else "Tap a line to edit",
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                            )
+                                                        }
                                                     }
 
-                                                    item { Text("Move Y", style = MaterialTheme.typography.labelSmall) }
-                                                    item {
-                                                        val maxY = editorSizePx.height.toFloat().coerceAtLeast(1f)
-                                                        Slider(
-                                                            value = sel.centerY.coerceIn(0f, maxY),
-                                                            onValueChange = { v ->
-                                                                updateSelectedLine { it.copy(centerY = v.coerceIn(0f, maxY)) }
-                                                            },
-                                                            valueRange = 0f..maxY
-                                                        )
-                                                    }
-
-                                                    item { Text("Rotate", style = MaterialTheme.typography.labelSmall) }
-                                                    item {
-                                                        Slider(
-                                                            value = sel.rotationDeg,
-                                                            onValueChange = { v -> updateSelectedLine { it.copy(rotationDeg = v) } },
-                                                            valueRange = -180f..180f
-                                                        )
-                                                    }
-
-                                                    item { Text("Length", style = MaterialTheme.typography.labelSmall) }
-                                                    item {
-                                                        Slider(
-                                                            value = sel.lengthPx,
-                                                            onValueChange = { v ->
-                                                                updateSelectedLine { it.copy(lengthPx = v.coerceIn(80f, 2000f)) }
-                                                            },
-                                                            valueRange = 80f..2000f
-                                                        )
-                                                    }
-
-                                                    item {
-                                                        OutlinedButton(
-                                                            onClick = { deleteSelectedLine() },
-                                                            modifier = Modifier.fillMaxWidth()
-                                                        ) { Text("Delete") }
-                                                    }
-                                                } else {
-                                                    item {
-                                                        Text(
-                                                            text = if (cropMode) "Crop mode: pinch + pan image"
-                                                            else "Tap a line to edit",
-                                                            style = MaterialTheme.typography.bodySmall,
-                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                        )
-                                                    }
+                                                    item { Spacer(modifier = Modifier.height(6.dp)) }
                                                 }
-
-                                                item { Spacer(modifier = Modifier.height(6.dp)) }
                                             }
                                         }
                                     }
