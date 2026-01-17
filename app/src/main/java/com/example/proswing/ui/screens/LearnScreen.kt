@@ -1,5 +1,6 @@
 package com.example.proswing.ui.screens
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -18,38 +19,290 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+
+private data class Lesson(
+    val id: String,
+    val title: String,
+    val youtubeUrl: String? = null,
+    val startSec: Int? = null,
+    val endSec: Int? = null
+)
 
 private data class Chapter(
     val number: Int,
     val title: String,
-    val lessons: List<String>
+    val lessons: List<Lesson>
 )
+
+private fun parseTimeToSeconds(time: String): Int? {
+    val t = time.trim()
+    val parts = t.split(":")
+    return try {
+        when (parts.size) {
+            2 -> {
+                val m = parts[0].toInt()
+                val s = parts[1].toInt()
+                (m * 60) + s
+            }
+            3 -> {
+                val h = parts[0].toInt()
+                val m = parts[1].toInt()
+                val s = parts[2].toInt()
+                (h * 3600) + (m * 60) + s
+            }
+            else -> null
+        }
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun extractYoutubeId(url: String): String? {
+    return try {
+        val uri = Uri.parse(url)
+        if (uri.host?.contains("youtu.be") == true) {
+            uri.lastPathSegment
+        } else {
+            uri.getQueryParameter("v")
+        }
+    } catch (_: Exception) {
+        null
+    }
+}
+
+@Composable
+private fun YoutubeEmbed(
+    youtubeUrl: String,
+    startSeconds: Int? = null
+) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val videoId = remember(youtubeUrl) { extractYoutubeId(youtubeUrl) }
+
+    if (videoId == null) {
+        Text(
+            text = "Invalid YouTube link.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error
+        )
+        return
+    }
+
+    val start = (startSeconds ?: 0).coerceAtLeast(0)
+
+    // Reset error state whenever a new URL is selected
+    var embedFailed by remember(youtubeUrl) { mutableStateOf(false) }
+
+    // Keep refs so we can cue/load when lesson changes
+    var playerView: YouTubePlayerView? by remember { mutableStateOf(null) }
+    var youTubePlayer: YouTubePlayer? by remember { mutableStateOf(null) }
+
+    // If the player never becomes ready (common when init fails), show fallback after a few seconds.
+    LaunchedEffect(videoId, start) {
+        embedFailed = false
+        youTubePlayer = null
+
+        // Give it a moment to initialise; if still not ready, show fallback.
+        delay(4000)
+        if (youTubePlayer == null) {
+            embedFailed = true
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        onDispose {
+            playerView?.let { view ->
+                lifecycleOwner.lifecycle.removeObserver(view)
+                view.release()
+            }
+            playerView = null
+            youTubePlayer = null
+        }
+    }
+
+    Card(shape = RoundedCornerShape(16.dp)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+        ) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx ->
+                    YouTubePlayerView(ctx).also { view ->
+                        playerView = view
+
+                        // MANUAL INITIALIZATION (more reliable in Compose than auto init)
+                        view.enableAutomaticInitialization = false
+
+                        val iFramePlayerOptions = IFramePlayerOptions.Builder()
+                            .controls(1)
+                            .build()
+
+                        view.initialize(
+                            object : AbstractYouTubePlayerListener() {
+                                override fun onReady(player: YouTubePlayer) {
+                                    youTubePlayer = player
+                                    // cueVideo avoids autoplay restrictions
+                                    player.cueVideo(videoId, start.toFloat())
+                                }
+
+                                override fun onError(
+                                    player: YouTubePlayer,
+                                    error: PlayerConstants.PlayerError
+                                ) {
+                                    embedFailed = true
+                                }
+                            },
+                            true,
+                            iFramePlayerOptions
+                        )
+
+                        lifecycleOwner.lifecycle.addObserver(view)
+                    }
+                },
+                update = {
+                    // When user selects a different lesson, update the mounted player
+                    youTubePlayer?.cueVideo(videoId, start.toFloat())
+                }
+            )
+
+            if (embedFailed) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "This video can’t be played inside the app (player init failed or embedding disabled).",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Button(
+                        onClick = {
+                            val ctx = playerView?.context
+                            if (ctx != null) {
+                                val sep = if (youtubeUrl.contains("?")) "&" else "?"
+                                val intent = android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    Uri.parse(youtubeUrl + sep + "t=${start}s")
+                                )
+                                ctx.startActivity(intent)
+                            }
+                        }
+                    ) {
+                        Text("Open in YouTube")
+                    }
+                }
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LearnScreen() {
+
     val chapters = remember {
-        (1..6).map { chapterNumber ->
+        listOf(
             Chapter(
-                number = chapterNumber,
-                title = "Chapter $chapterNumber",
-                lessons = (1..10).map { lessonNumber -> "${chapterNumber}.${lessonNumber}" }
+                number = 1,
+                title = "Chapter 1: Basics",
+                lessons = listOf(
+                    Lesson(
+                        id = "1.1",
+                        title = "The grip",
+                        youtubeUrl = "https://www.youtube.com/watch?v=hhnhHgvOaB0"
+                    ),
+                    Lesson(
+                        id = "1.2",
+                        title = "Athletic setup",
+                        youtubeUrl = "https://www.youtube.com/watch?v=3fpzZr_w56M",
+                        startSec = parseTimeToSeconds("1:31"),
+                        endSec = parseTimeToSeconds("2:57")
+                    ),
+                    Lesson(
+                        id = "1.3",
+                        title = "A bit more detail on the set up.",
+                        youtubeUrl = "https://www.youtube.com/watch?v=oandn2z-KwA"
+                    ),
+                    Lesson(
+                        id = "1.3b",
+                        title = "Coordination",
+                        youtubeUrl = "https://www.youtube.com/watch?v=3fpzZr_w56M",
+                        startSec = parseTimeToSeconds("2:57"),
+                        endSec = parseTimeToSeconds("4:00")
+                    ),
+                    Lesson(
+                        id = "1.4",
+                        title = "Move your feet",
+                        youtubeUrl = "https://www.youtube.com/watch?v=3fpzZr_w56M",
+                        startSec = parseTimeToSeconds("4:00"),
+                        endSec = parseTimeToSeconds("5:14")
+                    ),
+                    Lesson(
+                        id = "1.5",
+                        title = "Strip the swing down",
+                        youtubeUrl = "https://www.youtube.com/watch?v=3fpzZr_w56M",
+                        startSec = parseTimeToSeconds("5:14"),
+                        endSec = parseTimeToSeconds("6:44")
+                    ),
+                    Lesson(
+                        id = "1.6",
+                        title = "Include the golf club",
+                        youtubeUrl = "https://www.youtube.com/watch?v=3fpzZr_w56M",
+                        startSec = parseTimeToSeconds("6:44"),
+                        endSec = parseTimeToSeconds("8:04")
+                    ),
+                    Lesson(
+                        id = "1.7",
+                        title = "Putting everything together",
+                        youtubeUrl = "https://www.youtube.com/watch?v=3fpzZr_w56M",
+                        startSec = parseTimeToSeconds("8:04"),
+                        endSec = parseTimeToSeconds("11:02")
+                    ),
+                    Lesson(
+                        id = "1.8",
+                        title = "Recap with a pro",
+                        youtubeUrl = "https://www.youtube.com/watch?v=24OoFmZiYbU",
+                        startSec = 0
+                    ),
+                    Lesson(
+                        id = "1.9",
+                        title = "Don't forget to warm up",
+                        youtubeUrl = "https://www.youtube.com/watch?v=pZRBJkvrlz4",
+                        startSec = parseTimeToSeconds("0:38"),
+                        endSec = parseTimeToSeconds("1:36")
+                    ),
+                    Lesson(
+                        id = "1.10",
+                        title = "Time to practice!",
+                        youtubeUrl = null
+                    )
+                )
             )
-        }
+        )
     }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
-    // Track which chapters are expanded inside the drawer
     val expandedChapters = remember { mutableStateMapOf<Int, Boolean>() }
 
-    // Selected lesson (null means "Introduction screen")
-    var selectedLesson by remember { mutableStateOf<String?>(null) }
-    var lessonContent by remember { mutableStateOf("") }
+    var selectedLesson by remember { mutableStateOf<Lesson?>(null) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -87,9 +340,7 @@ fun LearnScreen() {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable {
-                                            expandedChapters[chapter.number] = !isExpanded
-                                        }
+                                        .clickable { expandedChapters[chapter.number] = !isExpanded }
                                         .padding(horizontal = 16.dp, vertical = 14.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -112,23 +363,20 @@ fun LearnScreen() {
                                             .padding(bottom = 8.dp)
                                     ) {
                                         chapter.lessons.forEach { lesson ->
-                                            val isSelected = lesson == selectedLesson
+                                            val isSelected = lesson.id == selectedLesson?.id
 
                                             Row(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .clickable {
                                                         selectedLesson = lesson
-                                                        lessonContent = "Content for lesson $lesson (placeholder)."
-
-                                                        // Close the drawer after selection (feels nicer)
                                                         scope.launch { drawerState.close() }
                                                     }
                                                     .padding(horizontal = 18.dp, vertical = 10.dp),
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Text(
-                                                    text = lesson,
+                                                    text = "${lesson.id}  ${lesson.title}",
                                                     style = MaterialTheme.typography.bodyLarge,
                                                     modifier = Modifier.weight(1f),
                                                     color = if (isSelected) MaterialTheme.colorScheme.primary
@@ -136,7 +384,7 @@ fun LearnScreen() {
                                                 )
                                                 Icon(
                                                     imageVector = Icons.Filled.KeyboardArrowRight,
-                                                    contentDescription = "Open lesson"
+                                                    contentDescription = "Open lesson",
                                                 )
                                             }
                                         }
@@ -172,7 +420,7 @@ fun LearnScreen() {
                         )
 
                         Text(
-                            text = "Welcome to the ProSwing course template.\n\nUse the right-edge handle to open the chapter list. Select a lesson to start learning. Each lesson will display its content here.",
+                            text = "Chapter 1 is wired with titles + YouTube clips.\n\nUse the right-edge handle to open the chapter list and select a lesson.",
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Start
                         )
@@ -185,25 +433,41 @@ fun LearnScreen() {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } else {
+                        val lesson = selectedLesson!!
+
                         Text(
-                            text = "Lesson ${selectedLesson!!}",
+                            text = "Lesson ${lesson.id}: ${lesson.title}",
                             style = MaterialTheme.typography.headlineMedium
                         )
 
-                        Text(
-                            text = lessonContent,
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Start
-                        )
+                        if (lesson.youtubeUrl != null) {
+                            val start = lesson.startSec
+                            val end = lesson.endSec
+                            val rangeText = when {
+                                start != null && end != null -> "Clip: ${start}s → ${end}s"
+                                start != null && end == null -> "Clip starts at: ${start}s"
+                                else -> "Full video"
+                            }
+                            Text(
+                                text = rangeText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            YoutubeEmbed(
+                                youtubeUrl = lesson.youtubeUrl,
+                                startSeconds = lesson.startSec
+                            )
+                        } else {
+                            Text(
+                                text = "This lesson has no video yet.",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        TextButton(
-                            onClick = {
-                                selectedLesson = null
-                                lessonContent = ""
-                            }
-                        ) {
+                        TextButton(onClick = { selectedLesson = null }) {
                             Text("Back to introduction")
                         }
                     }
@@ -221,25 +485,24 @@ fun LearnScreen() {
             // Right-edge "handle" to open the drawer
             Box(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
+                    .align(Alignment.CenterStart)
                     .padding(end = 6.dp)
                     .width(18.dp)
                     .height(120.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
                         shape = RoundedCornerShape(12.dp)
                     )
-                    .clickable {
-                        scope.launch { drawerState.open() }
-                    },
+                    .clickable { scope.launch { drawerState.open() } },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowRight,
                     contentDescription = "Open course contents",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
+
         }
     }
 }

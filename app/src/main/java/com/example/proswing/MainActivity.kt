@@ -9,10 +9,12 @@ import com.example.proswing.ui.theme.ProswingTheme
 import com.example.proswing.viewmodel.SettingsViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import android.webkit.WebView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WebView.setWebContentsDebuggingEnabled(true)
         setContent {
             // Observe theme preference from DataStore via SettingsViewModel
             val settingsViewModel: SettingsViewModel = viewModel()

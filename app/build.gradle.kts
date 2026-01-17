@@ -59,8 +59,10 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
-    implementation ("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material:material-icons-extended")
 
+    // ---- Video ----
+    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.1")
 
     // ---- Navigation + Accompanist ----
     implementation("androidx.navigation:navigation-compose:2.8.3")
