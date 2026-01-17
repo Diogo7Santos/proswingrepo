@@ -59,6 +59,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
+    implementation ("androidx.compose.material:material-icons-extended")
 
 
     // ---- Navigation + Accompanist ----
@@ -68,6 +69,7 @@ dependencies {
     // ---- Room (Database) ----
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+    implementation(libs.androidx.compose.animation.core.lint)
     kapt("androidx.room:room-compiler:2.6.1")
 
     // ---- Testing ----

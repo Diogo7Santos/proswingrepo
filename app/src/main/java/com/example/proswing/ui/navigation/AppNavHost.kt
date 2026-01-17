@@ -38,6 +38,20 @@ fun AppNavHost() {
     val scope = rememberCoroutineScope()
     val colors = MaterialTheme.colorScheme
 
+    // Track current route
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+
+    // ✅ Lock drawer gestures ONLY on AnalyseEditor
+    val drawerGesturesEnabled = currentRoute != Destinations.ANALYSE_EDITOR
+
+    // ✅ If we enter AnalyseEditor, force-close the drawer just in case
+    LaunchedEffect(currentRoute) {
+        if (currentRoute == Destinations.ANALYSE_EDITOR && drawerState.isOpen) {
+            drawerState.close()
+        }
+    }
+
     // Drawer items — using SVG icons and some built-in Material ones
     val drawerItems = listOf(
         NavDrawerItem("Home", Destinations.HOME, R.drawable.ic_home, true),
@@ -51,12 +65,9 @@ fun AppNavHost() {
         NavDrawerItem("Settings", Destinations.SETTINGS, null, false)
     )
 
-    // Track current route
-    val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry?.destination?.route
-
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = drawerGesturesEnabled, // ✅ this is the lock
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = colors.primary,
@@ -123,7 +134,14 @@ fun AppNavHost() {
                             )
                         },
                         navigationIcon = {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            IconButton(
+                                onClick = {
+                                    // ✅ optionally block opening drawer on AnalyseEditor too
+                                    if (drawerGesturesEnabled) {
+                                        scope.launch { drawerState.open() }
+                                    }
+                                }
+                            ) {
                                 Icon(Icons.Default.Menu, contentDescription = "Menu")
                             }
                         },
@@ -149,7 +167,6 @@ fun AppNavHost() {
                     composable(Destinations.HOME) { HomeScreen() }
                     composable(Destinations.LEARN) { LearnScreen() }
 
-                    // UPDATED: AnalyseScreen now receives a callback that navigates to AnalyseEditorScreen
                     composable(Destinations.ANALYSE) {
                         AnalyseScreen(
                             onAnalyseClick = { navController.navigate(Destinations.ANALYSE_EDITOR) }
