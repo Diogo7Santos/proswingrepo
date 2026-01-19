@@ -42,7 +42,8 @@ fun ScorecardScreen(
                     Column(horizontalAlignment = Alignment.End) {
                         ExtendedFloatingActionButton(
                             icon = { Icon(Icons.Default.Add, contentDescription = "9 Holes") },
-                            text = { Text("9 Holes") },
+                            text = { Text("9 Holes",
+                                color = MaterialTheme.colorScheme.onBackground) },
                             onClick = {
                                 holeCount = 9
                                 showNewRound = true
@@ -55,7 +56,8 @@ fun ScorecardScreen(
 
                         ExtendedFloatingActionButton(
                             icon = { Icon(Icons.Default.Add, contentDescription = "18 Holes") },
-                            text = { Text("18 Holes") },
+                            text = { Text("18 Holes",
+                                color = MaterialTheme.colorScheme.onBackground) },
                             onClick = {
                                 holeCount = 18
                                 showNewRound = true
