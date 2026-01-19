@@ -225,7 +225,8 @@ fun AnalyseScreen(
                         onClick = { stepBy(-stepMs) },
                         enabled = playerState.value != null
                     ) {
-                        Text("◀ Frame back")
+                        Text("◀ Frame back",
+                            color = MaterialTheme.colorScheme.onBackground)
                     }
 
                     OutlinedButton(
@@ -233,7 +234,8 @@ fun AnalyseScreen(
                         onClick = { stepBy(stepMs) },
                         enabled = playerState.value != null
                     ) {
-                        Text("Frame forward ▶")
+                        Text("Frame forward ▶",
+                            color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
 

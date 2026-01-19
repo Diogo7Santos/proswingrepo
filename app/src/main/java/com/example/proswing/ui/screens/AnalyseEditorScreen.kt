@@ -614,7 +614,8 @@ fun AnalyseEditorScreen(
                                                             modifier = Modifier.fillMaxWidth(),
                                                             enabled = selectedFrame != null
                                                         ) {
-                                                            Text(if (cropMode) "Crop: ON" else "Crop: OFF")
+                                                            Text(if (cropMode) "Crop: ON" else "Crop: OFF",
+                                                                color = MaterialTheme.colorScheme.onBackground)
                                                         }
                                                     }
 
@@ -635,7 +636,8 @@ fun AnalyseEditorScreen(
                                                             modifier = Modifier.fillMaxWidth(),
                                                             enabled = selectedPerspective != null
                                                         ) {
-                                                            Text(if (templateEnabled) "Template: ON" else "Template: OFF")
+                                                            Text(if (templateEnabled) "Template: ON" else "Template: OFF",
+                                                                color = MaterialTheme.colorScheme.onBackground)
                                                         }
                                                     }
 

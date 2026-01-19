@@ -1,11 +1,18 @@
 package com.example.proswing.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.with
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -17,18 +24,37 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proswing.R
 import com.example.proswing.viewmodel.SettingsViewModel
-import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun HomeScreen(
     onCaddieClick: () -> Unit = {},
     onSwingClick: () -> Unit = {},
+    onScorecardClick: () -> Unit = {},
+    onMyBagClick: () -> Unit = {},
     settingsViewModel: SettingsViewModel = viewModel()
 ) {
     val settings by settingsViewModel.settings.collectAsState()
     val handicap = settings.handicap
+
+    val tips = remember {
+        listOf(
+            "Use Learn to follow the course and build solid swing fundamentals.",
+            "Analyse lets you crop and add lines to check key swing positions.",
+            "Turn Crop ON to pinch and pan the image inside the editor.",
+            "Use Template ON to align your setup (DTL or Face-on).",
+            "Save exports exactly what you see: crop, overlays, and lines."
+        )
+    }
+    var tipIndex by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(5500)
+            tipIndex = (tipIndex + 1) % tips.size
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -37,12 +63,10 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- Top Section: Caddie + Handicap cards ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Virtual Caddie Card
             Card(
                 modifier = Modifier
                     .weight(1f)
@@ -60,23 +84,23 @@ fun HomeScreen(
                     Text(
                         text = "Virtual Caddie",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        fontWeight = FontWeight.Bold
                     )
 
-                    // Caddie Logo Button
-                    IconButton(onClick = { onCaddieClick() }) {
+                    IconButton(
+                        onClick = { onCaddieClick() },
+                        modifier = Modifier.size(100.dp)
+                    ) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_caddie), // ⛳ your logo here
+                            painter = painterResource(id = R.drawable.ic_caddie),
                             contentDescription = "Caddie Logo",
-                            modifier = Modifier.size(48.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+                            modifier = Modifier.fillMaxSize(),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
                         )
                     }
                 }
             }
 
-            // Handicap Card
             Card(
                 modifier = Modifier
                     .weight(1f)
@@ -94,37 +118,34 @@ fun HomeScreen(
                     Text(
                         text = "Your Handicap",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        fontWeight = FontWeight.Bold
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = if (handicap == 0) "0 (Pro)" else handicap.toString(),
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
             }
         }
 
-        // --- Middle Full-Width Button ---
         Button(
-            onClick = {},
+            onClick = { onSwingClick() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(150.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onBackground), // hide default color
-            contentPadding = PaddingValues(0.dp) // remove default inner padding
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onBackground),
+            contentPadding = PaddingValues(0.dp)
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.tigerswing), // your image in drawable
+                    painter = painterResource(id = R.drawable.tigerswing),
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop // or Fit, depending on image
+                    contentScale = ContentScale.Crop
                 )
 
                 Text(
@@ -132,9 +153,128 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground // text visible over image
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 )
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 90.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Tips",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                AnimatedContent(
+                    targetState = tips[tipIndex],
+                    transitionSpec = {
+                        (slideInHorizontally(
+                            animationSpec = tween(300),
+                            initialOffsetX = { it }
+                        ) + fadeIn(animationSpec = tween(300)))
+                            .with(
+                                slideOutHorizontally(
+                                    animationSpec = tween(250),
+                                    targetOffsetX = { -it }
+                                ) + fadeOut(animationSpec = tween(250))
+                            )
+                    },
+                    label = "tips"
+                ) { tip ->
+                    Text(
+                        text = tip,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(140.dp)
+                    .padding(end = 8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Virtual Scorecard",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    IconButton(
+                        onClick = { onScorecardClick() },
+                        modifier = Modifier
+                            .size(100.dp)
+                            .minimumInteractiveComponentSize()
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_scorecard),
+                            contentDescription = "Scorecard",
+                            modifier = Modifier.fillMaxSize(),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                        )
+                    }
+                }
+            }
+
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(140.dp)
+                    .padding(start = 8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "My Bag",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    IconButton(
+                        onClick = { onMyBagClick() },
+                        modifier = Modifier
+                            .size(100.dp)
+                            .minimumInteractiveComponentSize()
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_mybag),
+                            contentDescription = "My Bag",
+                            modifier = Modifier.fillMaxSize(),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                        )
+                    }
+                }
             }
         }
     }
