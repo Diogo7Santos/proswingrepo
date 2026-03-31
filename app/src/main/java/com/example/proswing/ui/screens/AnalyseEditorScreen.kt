@@ -516,7 +516,7 @@ fun AnalyseEditorScreen(
                                                     painter = androidx.compose.ui.res.painterResource(id = resId),
                                                     contentDescription = "Template overlay",
                                                     modifier = Modifier.fillMaxSize(),
-                                                    alpha = 0.25f
+                                                    alpha = 1f
                                                 )
                                             }
                                         }
@@ -703,7 +703,7 @@ fun AnalyseEditorScreen(
                                                             OutlinedButton(
                                                                 onClick = { deleteSelectedLine() },
                                                                 modifier = Modifier.fillMaxWidth()
-                                                            ) { Text("Delete") }
+                                                            ) { Text("Delete")}
                                                         }
                                                     } else {
                                                         item {

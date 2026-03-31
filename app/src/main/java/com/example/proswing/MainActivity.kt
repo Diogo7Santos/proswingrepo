@@ -1,29 +1,30 @@
 package com.example.proswing
 
 import android.os.Bundle
+import android.webkit.WebView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proswing.data.AppDatabase
 import com.example.proswing.ui.navigation.AppNavHost
 import com.example.proswing.ui.theme.ProswingTheme
 import com.example.proswing.viewmodel.SettingsViewModel
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
-import android.webkit.WebView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WebView.setWebContentsDebuggingEnabled(true)
+
+        val database = AppDatabase.getDatabase(applicationContext)
+
         setContent {
-            // Observe theme preference from DataStore via SettingsViewModel
             val settingsViewModel: SettingsViewModel = viewModel()
             val settings by settingsViewModel.settings.collectAsState()
 
-            // Apply theme dynamically
             ProswingTheme(darkTheme = settings.darkTheme) {
-                // Root of your app – includes Scaffold + Navigation Drawer
-                AppNavHost()
+                AppNavHost(database = database)
             }
         }
     }

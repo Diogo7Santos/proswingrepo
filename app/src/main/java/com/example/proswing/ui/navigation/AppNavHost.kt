@@ -17,12 +17,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.proswing.R
+import com.example.proswing.data.AppDatabase
 import com.example.proswing.ui.screens.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavHost() {
+fun AppNavHost(
+    database: AppDatabase
+) {
     val screenTitles = mapOf(
         Destinations.HOME to "Home",
         Destinations.LEARN to "Learn",
@@ -42,10 +45,10 @@ fun AppNavHost() {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
-    // ✅ Lock drawer gestures ONLY on AnalyseEditor
+    // Lock drawer gestures ONLY on AnalyseEditor
     val drawerGesturesEnabled = currentRoute != Destinations.ANALYSE_EDITOR
 
-    // ✅ If we enter AnalyseEditor, force-close the drawer just in case
+    // If we enter AnalyseEditor, force-close the drawer just in case
     LaunchedEffect(currentRoute) {
         if (currentRoute == Destinations.ANALYSE_EDITOR && drawerState.isOpen) {
             drawerState.close()
@@ -67,7 +70,7 @@ fun AppNavHost() {
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = drawerGesturesEnabled, // ✅ this is the lock
+        gesturesEnabled = drawerGesturesEnabled,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = colors.primary,
@@ -136,7 +139,6 @@ fun AppNavHost() {
                         navigationIcon = {
                             IconButton(
                                 onClick = {
-                                    // ✅ optionally block opening drawer on AnalyseEditor too
                                     if (drawerGesturesEnabled) {
                                         scope.launch { drawerState.open() }
                                     }
@@ -175,7 +177,7 @@ fun AppNavHost() {
 
                     composable(Destinations.ANALYSE_EDITOR) { AnalyseEditorScreen() }
 
-                    composable(Destinations.CADDIE) { CaddieScreen() }
+                    composable(Destinations.CADDIE) { CaddieScreen(database = database) }
                     composable(Destinations.HANDICAP) { HandicapScreen() }
                     composable(Destinations.SCORECARD) { ScorecardScreen() }
                     composable(Destinations.MYBAG) { MyBagScreen() }
