@@ -1,12 +1,12 @@
 package com.example.proswing.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proswing.data.AppDatabase
@@ -32,145 +32,255 @@ fun CaddieScreen(
     var elevationType by remember { mutableStateOf(ElevationType.FLAT) }
     var lieType by remember { mutableStateOf(LieType.NORMAL) }
 
+    var currentStep by remember { mutableStateOf(0) }
+    var showRecommendationDialog by remember { mutableStateOf(false) }
+
+    val totalSteps = 5
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Virtual Caddie",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
+            if (clubList.isEmpty()) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Virtual Caddie",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
 
-            Text(
-                text = "Get a club recommendation using your saved yardages.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)
-            )
+                    Text(
+                        text = "No clubs with saved carry yardages were found.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center
+                    )
 
-            OutlinedTextField(
-                value = distanceInput,
-                onValueChange = { distanceInput = it.filter(Char::isDigit) },
-                label = { Text("Distance to pin (yards)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            CaddieDropdown(
-                label = "Course Element",
-                options = CourseElement.entries,
-                selected = selectedElement,
-                onSelected = { selectedElement = it },
-                optionLabel = { it.label }
-            )
-
-            CaddieDropdown(
-                label = "Wind",
-                options = WindType.entries,
-                selected = windType,
-                onSelected = { windType = it },
-                optionLabel = { it.label }
-            )
-
-            if (windType != WindType.NONE) {
-                Column {
-                    Text("Wind strength: $windStrength yds adjustment")
-                    Slider(
-                        value = windStrength.toFloat(),
-                        onValueChange = { windStrength = it.toInt() },
-                        valueRange = 0f..20f
+                    Text(
+                        text = "Add or update your club yardages in My Bag first.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f),
+                        textAlign = TextAlign.Center
                     )
                 }
-            }
-
-            CaddieDropdown(
-                label = "Elevation",
-                options = ElevationType.entries,
-                selected = elevationType,
-                onSelected = { elevationType = it },
-                optionLabel = { it.label }
-            )
-
-            CaddieDropdown(
-                label = "Lie",
-                options = LieType.entries,
-                selected = lieType,
-                onSelected = { lieType = it },
-                optionLabel = { it.label }
-            )
-
-            Button(
-                onClick = {
-                    viewModel.generateRecommendation(
-                        distanceToPin = distanceInput.toIntOrNull() ?: 0,
-                        courseElement = selectedElement,
-                        windType = windType,
-                        windStrength = windStrength,
-                        elevationType = elevationType,
-                        lieType = lieType
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = distanceInput.isNotBlank() && clubList.isNotEmpty()
-            ) {
-                Text("Get Recommendation")
-            }
-
-            HorizontalDivider()
-
-            Text(
-                text = "Saved Yardages",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            if (clubList.isEmpty()) {
-                Text(
-                    text = "No clubs with saved carry yardages found. Add or update yardages in My Bag first.",
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)
-                )
             } else {
-                clubList.forEach { club ->
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth()
+                ElevatedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 500.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
+                        Text(
+                            text = "Virtual Caddie",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Step ${currentStep + 1} of $totalSteps",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        LinearProgressIndicator(
+                            progress = { (currentStep + 1) / totalSteps.toFloat() },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        when (currentStep) {
+                            0 -> {
+                                StepContainer(
+                                    title = "How far is it to the pin?",
+                                    subtitle = "Enter the distance in yards."
+                                ) {
+                                    OutlinedTextField(
+                                        value = distanceInput,
+                                        onValueChange = {
+                                            distanceInput = it.filter(Char::isDigit)
+                                        },
+                                        label = { Text("Distance to pin (yards)") },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+
+                            1 -> {
+                                StepContainer(
+                                    title = "What is the course element?",
+                                    subtitle = "This helps filter the clubs realistically."
+                                ) {
+                                    CaddieDropdown(
+                                        label = "Course Element",
+                                        options = CourseElement.entries,
+                                        selected = selectedElement,
+                                        onSelected = { selectedElement = it },
+                                        optionLabel = { it.label }
+                                    )
+                                }
+                            }
+
+                            2 -> {
+                                StepContainer(
+                                    title = "What is the wind doing?",
+                                    subtitle = "Choose the wind type and strength."
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        CaddieDropdown(
+                                            label = "Wind",
+                                            options = WindType.entries,
+                                            selected = windType,
+                                            onSelected = { windType = it },
+                                            optionLabel = { it.label }
+                                        )
+
+                                        if (windType != WindType.NONE) {
+                                            Column(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(
+                                                    text = "Wind strength: $windStrength yds adjustment",
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
+                                                Slider(
+                                                    value = windStrength.toFloat(),
+                                                    onValueChange = { windStrength = it.toInt() },
+                                                    valueRange = 0f..20f,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            3 -> {
+                                StepContainer(
+                                    title = "What is the elevation?",
+                                    subtitle = "Is the shot flat, uphill, or downhill?"
+                                ) {
+                                    CaddieDropdown(
+                                        label = "Elevation",
+                                        options = ElevationType.entries,
+                                        selected = elevationType,
+                                        onSelected = { elevationType = it },
+                                        optionLabel = { it.label }
+                                    )
+                                }
+                            }
+
+                            4 -> {
+                                StepContainer(
+                                    title = "What is the lie?",
+                                    subtitle = "Choose the ball lie before getting the recommendation."
+                                ) {
+                                    CaddieDropdown(
+                                        label = "Lie",
+                                        options = LieType.entries,
+                                        selected = lieType,
+                                        onSelected = { lieType = it },
+                                        optionLabel = { it.label }
+                                    )
+                                }
+                            }
+                        }
+
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text(club.displayName, fontWeight = FontWeight.Medium)
-                            Text("${club.carryDistance} yds")
+                            OutlinedButton(
+                                onClick = { currentStep-- },
+                                enabled = currentStep > 0,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Back")
+                            }
+
+                            Button(
+                                onClick = {
+                                    if (currentStep < totalSteps - 1) {
+                                        currentStep++
+                                    } else {
+                                        viewModel.generateRecommendation(
+                                            distanceToPin = distanceInput.toIntOrNull() ?: 0,
+                                            courseElement = selectedElement,
+                                            windType = windType,
+                                            windStrength = windStrength,
+                                            elevationType = elevationType,
+                                            lieType = lieType
+                                        )
+                                        showRecommendationDialog = true
+                                    }
+                                },
+                                enabled = when (currentStep) {
+                                    0 -> distanceInput.isNotBlank()
+                                    else -> true
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(if (currentStep == totalSteps - 1) "Get Recommendation" else "Next")
+                            }
                         }
                     }
                 }
             }
+        }
 
-            HorizontalDivider()
-
-            Text(
-                text = "Recommendation",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            recommendation?.let { result ->
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+        if (showRecommendationDialog && recommendation != null) {
+            AlertDialog(
+                onDismissRequest = { showRecommendationDialog = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = { showRecommendationDialog = false }
                     ) {
+                        Text("Close")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showRecommendationDialog = false
+                            currentStep = 0
+                            distanceInput = ""
+                            selectedElement = CourseElement.FAIRWAY
+                            windType = WindType.NONE
+                            windStrength = 0
+                            elevationType = ElevationType.FLAT
+                            lieType = LieType.NORMAL
+                        }
+                    ) {
+                        Text("Start Over")
+                    }
+                },
+                title = {
+                    Text(
+                        text = "Club Recommendation",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    val result = recommendation!!
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             text = result.recommendedClub,
                             style = MaterialTheme.typography.headlineSmall,
@@ -179,20 +289,48 @@ fun CaddieScreen(
                         Text("Effective distance: ${result.effectiveDistance} yds")
                         Text("Saved carry distance: ${result.matchedCarryDistance} yds")
                         Text("Reason: ${result.reason}")
-
                         result.alternativeClub?.let {
                             Text("Alternative: $it")
                         }
                     }
                 }
-            } ?: Text(
-                text = "Enter the shot details and tap Get Recommendation.",
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
+
+@Composable
+private fun StepContainer(
+    title: String,
+    subtitle: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        content = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f),
+                textAlign = TextAlign.Center
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                content = content
+            )
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
