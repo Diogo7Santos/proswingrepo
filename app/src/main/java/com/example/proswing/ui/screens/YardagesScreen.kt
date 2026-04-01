@@ -34,7 +34,6 @@ fun YardagesScreen(
             .fillMaxSize()
             .padding(16.dp),
     ) {
-        // Title
         Text(
             text = "Distances",
             style = MaterialTheme.typography.headlineSmall,
@@ -76,7 +75,7 @@ fun YardagesScreen(
                             .heightIn(min = 60.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected)
-                                colors.primaryContainer
+                                colors.secondary
                             else colors.surface
                         ),
                         onClick = {
@@ -84,7 +83,10 @@ fun YardagesScreen(
                         }
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text("${club.type} ${club.variant ?: ""}".trim())
+                            Text(
+                                "${club.type} ${club.variant ?: ""}".trim(),
+                                color = if (isSelected) colors.tertiary else colors.onSurface
+                            )
                             Text(
                                 "${club.brand} ${club.model}",
                                 style = MaterialTheme.typography.bodySmall,
@@ -125,7 +127,16 @@ fun YardagesScreen(
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colors.onBackground,
+                        unfocusedTextColor = colors.onBackground,
+                        focusedBorderColor = colors.outline,
+                        unfocusedBorderColor = colors.onBackground,
+                        focusedLabelColor = colors.outline,
+                        unfocusedLabelColor = colors.onBackground,
+                        cursorColor = colors.outline
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -137,7 +148,16 @@ fun YardagesScreen(
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colors.onBackground,
+                        unfocusedTextColor = colors.onBackground,
+                        focusedBorderColor = colors.outline,
+                        unfocusedBorderColor = colors.onBackground,
+                        focusedLabelColor = colors.outline,
+                        unfocusedLabelColor = colors.onBackground,
+                        cursorColor = colors.outline
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +168,6 @@ fun YardagesScreen(
                         val total = totalDistance.toFloatOrNull()
 
                         if (carry != null && total != null) {
-                            // Always store in YARDS internally
                             val carryInYards = if (settings.useMeters) carry * 1.094f else carry
                             val totalInYards = if (settings.useMeters) total * 1.094f else total
 
