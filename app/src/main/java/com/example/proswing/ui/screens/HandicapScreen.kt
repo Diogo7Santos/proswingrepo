@@ -19,6 +19,7 @@ fun HandicapScreen(
 ) {
     val settings by settingsViewModel.settings.collectAsState()
     val scope = rememberCoroutineScope()
+    val colors = MaterialTheme.colorScheme
 
     // Handicap presets
     val handicapLevels = listOf(
@@ -39,16 +40,14 @@ fun HandicapScreen(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Display current handicap
         Text(
             text = "Your Handicap: ${settings.handicap}",
             style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = colors.onBackground
         )
 
         Divider(thickness = 1.dp)
 
-        // Manual input first
         Text(
             "Enter your custom handicap:",
             style = MaterialTheme.typography.titleMedium
@@ -59,7 +58,16 @@ fun HandicapScreen(
             onValueChange = { manualInput = it },
             label = { Text("Enter custom handicap") },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = colors.outline,
+                unfocusedTextColor = colors.onBackground,
+                focusedBorderColor = colors.outline,
+                unfocusedBorderColor = colors.onBackground,
+                focusedLabelColor = colors.outline,
+                unfocusedLabelColor = colors.onBackground,
+                cursorColor = colors.outline
+            )
         )
 
         Button(
@@ -77,7 +85,6 @@ fun HandicapScreen(
 
         Divider(thickness = 1.dp)
 
-        // Then preset dropdown
         Text(
             "Or select your experience level:",
             style = MaterialTheme.typography.titleMedium
@@ -87,25 +94,42 @@ fun HandicapScreen(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
         ) {
-            TextField(
+            OutlinedTextField(
                 readOnly = true,
                 value = handicapLevels.firstOrNull { it.second == settings.handicap }?.first
                     ?: "Custom (${settings.handicap})",
                 onValueChange = {},
                 label = { Text("Select Handicap Level") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
                     .menuAnchor()
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = colors.outline,
+                    unfocusedTextColor = colors.onBackground,
+                    focusedBorderColor = colors.outline,
+                    unfocusedBorderColor = colors.onBackground,
+                    focusedLabelColor = colors.outline,
+                    unfocusedLabelColor = colors.onBackground,
+                    focusedTrailingIconColor = colors.outline,
+                    unfocusedTrailingIconColor = colors.onBackground,
+                    cursorColor = colors.outline
+                )
             )
 
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                containerColor = colors.background
             ) {
                 handicapLevels.forEach { (label, value) ->
                     DropdownMenuItem(
-                        text = { Text(label) },
+                        text = {
+                            Text(
+                                text = label,
+                                color = colors.onBackground
+                            )
+                        },
                         onClick = {
                             scope.launch { settingsViewModel.setHandicap(value) }
                             expanded = false
