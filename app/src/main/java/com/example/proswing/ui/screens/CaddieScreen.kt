@@ -1,13 +1,17 @@
 package com.example.proswing.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proswing.data.AppDatabase
 import com.example.proswing.viewmodel.CaddieViewModel
@@ -88,7 +92,10 @@ fun CaddieScreen(
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 500.dp)
+                        .widthIn(max = 500.dp),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = colors.primary
+                    )
                 ) {
                     Column(
                         modifier = Modifier
@@ -125,7 +132,8 @@ fun CaddieScreen(
 
                         LinearProgressIndicator(
                             progress = { (currentStep + 1) / totalSteps.toFloat() },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            color = colors.outline
                         )
 
                         when (currentStep) {
@@ -141,6 +149,13 @@ fun CaddieScreen(
                                         },
                                         label = { Text("Distance to pin (yards)") },
                                         singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = KeyboardType.Number
+                                        ),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color.Green,
+                                            unfocusedBorderColor = colors.onBackground
+                                        ),
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -238,6 +253,7 @@ fun CaddieScreen(
                                 onClick = { currentStep-- },
                                 enabled = currentStep > 0,
                                 modifier = Modifier.weight(1f),
+                                border = BorderStroke(1.dp, Color(0xFFFFA500)),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = colors.onBackground,
                                     disabledContentColor = colors.onBackground.copy(alpha = 0.4f)
@@ -266,7 +282,8 @@ fun CaddieScreen(
                                     0 -> distanceInput.isNotBlank()
                                     else -> true
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                border = BorderStroke(1.dp, colors.outline)
                             ) {
                                 Text(if (currentStep == totalSteps - 1) "Get Recommendation" else "Next")
                             }
@@ -281,14 +298,20 @@ fun CaddieScreen(
                 onDismissRequest = { showRecommendationDialog = false },
                 confirmButton = {
                     TextButton(
-                        onClick = { showRecommendationDialog = false }
+                        onClick = { showRecommendationDialog = false },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = colors.onBackground
+                        )
                     ) {
                         Text("Close")
                     }
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = { resetForm() }
+                        onClick = { resetForm() },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = colors.onBackground
+                        )
                     ) {
                         Text("Start Over")
                     }
