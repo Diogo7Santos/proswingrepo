@@ -7,6 +7,7 @@ import android.graphics.*
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -571,7 +572,11 @@ fun AnalyseEditorScreen(
                                                     .padding(10.dp)
                                                     .width(170.dp)
                                                     .heightIn(max = 520.dp),
-                                                shape = RoundedCornerShape(18.dp)
+                                                shape = RoundedCornerShape(18.dp),
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = colors.background
+                                                ),
+                                                border = BorderStroke(3.dp, Color.Black)
                                             ) {
                                                 LazyColumn(
                                                     modifier = Modifier
@@ -629,7 +634,12 @@ fun AnalyseEditorScreen(
                                                                     cropMode = false
                                                                 },
                                                                 modifier = Modifier.fillMaxWidth()
-                                                            ) { Text("Line colour") }
+                                                            ) {
+                                                                Text(
+                                                                    "Line colour",
+                                                                    color = MaterialTheme.colorScheme.onBackground
+                                                                )
+                                                            }
                                                         }
 
                                                         item { Text("Move X", style = MaterialTheme.typography.labelSmall) }
@@ -640,7 +650,11 @@ fun AnalyseEditorScreen(
                                                                 onValueChange = { v ->
                                                                     updateSelectedLine { it.copy(centerX = v.coerceIn(0f, maxX)) }
                                                                 },
-                                                                valueRange = 0f..maxX
+                                                                valueRange = 0f..maxX,
+                                                                colors = SliderDefaults.colors(
+                                                                    thumbColor = colors.primary,
+                                                                    activeTrackColor = colors.primary
+                                                                )
                                                             )
                                                         }
 
@@ -652,7 +666,11 @@ fun AnalyseEditorScreen(
                                                                 onValueChange = { v ->
                                                                     updateSelectedLine { it.copy(centerY = v.coerceIn(0f, maxY)) }
                                                                 },
-                                                                valueRange = 0f..maxY
+                                                                valueRange = 0f..maxY,
+                                                                colors = SliderDefaults.colors(
+                                                                    thumbColor = colors.primary,
+                                                                    activeTrackColor = colors.primary
+                                                                )
                                                             )
                                                         }
 
@@ -661,7 +679,11 @@ fun AnalyseEditorScreen(
                                                             Slider(
                                                                 value = sel.rotationDeg,
                                                                 onValueChange = { v -> updateSelectedLine { it.copy(rotationDeg = v) } },
-                                                                valueRange = -180f..180f
+                                                                valueRange = -180f..180f,
+                                                                colors = SliderDefaults.colors(
+                                                                    thumbColor = colors.primary,
+                                                                    activeTrackColor = colors.primary
+                                                                )
                                                             )
                                                         }
 
@@ -672,7 +694,11 @@ fun AnalyseEditorScreen(
                                                                 onValueChange = { v ->
                                                                     updateSelectedLine { it.copy(lengthPx = v.coerceIn(80f, 2000f)) }
                                                                 },
-                                                                valueRange = 80f..2000f
+                                                                valueRange = 80f..2000f,
+                                                                colors = SliderDefaults.colors(
+                                                                    thumbColor = colors.primary,
+                                                                    activeTrackColor = colors.primary
+                                                                )
                                                             )
                                                         }
 
@@ -680,7 +706,12 @@ fun AnalyseEditorScreen(
                                                             OutlinedButton(
                                                                 onClick = { deleteSelectedLine() },
                                                                 modifier = Modifier.fillMaxWidth()
-                                                            ) { Text("Delete") }
+                                                            ) {
+                                                                Text(
+                                                                    "Delete",
+                                                                    color = MaterialTheme.colorScheme.onBackground
+                                                                )
+                                                            }
                                                         }
                                                     } else {
                                                         item {
