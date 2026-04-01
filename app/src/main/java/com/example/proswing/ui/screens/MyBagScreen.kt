@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -44,7 +45,12 @@ fun MyBagScreen(
         containerColor = colors.background,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true },containerColor = colors.primary) { Icon(Icons.Default.Add, contentDescription = "Add Club") }
+            FloatingActionButton(
+                onClick = { showDialog = true },
+                containerColor = colors.primary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Club")
+            }
         }
     ) { innerPadding ->
         Box(
@@ -65,6 +71,22 @@ fun MyBagScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = colors.background,
+                                contentColor = colors.onBackground
+                            )
+                        ) {
+                            Text(
+                                text = "Swipe card to delete club",
+                                modifier = Modifier.padding(12.dp),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+
                     items(clubs, key = { it.id }) { club ->
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { value ->
@@ -160,7 +182,6 @@ fun MyBagScreen(
                                     Text("Brand: ${club.brand}")
                                     Text("Model: ${club.model}")
 
-                                    // Show saved yardages with conversion
                                     if (club.carryDistance != null && club.totalDistance != null) {
                                         val carryDisplay =
                                             if (settings.useMeters) club.carryDistance / 1.094 else club.carryDistance
@@ -212,6 +233,7 @@ fun AddClubDialog(onDismiss: () -> Unit, onAdd: (GolfClub) -> Unit) {
         "Takomo Golf", "TaylorMade", "Titleist", "Tour Edge", "Slazenger",
         "Wilson Staff", "XXIO", "Other"
     )
+    val colors = MaterialTheme.colorScheme
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -252,11 +274,20 @@ fun AddClubDialog(onDismiss: () -> Unit, onAdd: (GolfClub) -> Unit) {
                         readOnly = true,
                         value = selectedBrand,
                         onValueChange = {},
-                        label = { Text("Select Brand") },
+                        label = { Text(
+                            "Select Brand",
+                            color = MaterialTheme.colorScheme.onBackground
+                            ) },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBrand)
                         },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = colors.outline,
+                            unfocusedIndicatorColor = colors.onSurfaceVariant
+                        )
                     )
                     ExposedDropdownMenu(
                         expanded = expandedBrand,
@@ -279,7 +310,11 @@ fun AddClubDialog(onDismiss: () -> Unit, onAdd: (GolfClub) -> Unit) {
                     value = model,
                     onValueChange = { model = it },
                     label = { Text("Model Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.outline,
+                        unfocusedBorderColor = colors.onBackground
+                    )
                 )
             }
         },
@@ -293,7 +328,12 @@ fun AddClubDialog(onDismiss: () -> Unit, onAdd: (GolfClub) -> Unit) {
             ) { Text("Add") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) {
+                Text(
+                    "Cancel",
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
     )
 }
