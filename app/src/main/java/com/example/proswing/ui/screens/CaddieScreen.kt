@@ -36,9 +36,21 @@ fun CaddieScreen(
     var showRecommendationDialog by remember { mutableStateOf(false) }
 
     val totalSteps = 5
+    val colors = MaterialTheme.colorScheme
+
+    fun resetForm() {
+        currentStep = 0
+        distanceInput = ""
+        selectedElement = CourseElement.FAIRWAY
+        windType = WindType.NONE
+        windStrength = 0
+        elevationType = ElevationType.FLAT
+        lieType = LieType.NORMAL
+        showRecommendationDialog = false
+    }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = colors.background
     ) { innerPadding ->
 
         Box(
@@ -68,7 +80,7 @@ fun CaddieScreen(
                     Text(
                         text = "Add or update your club yardages in My Bag first.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f),
+                        color = colors.onBackground.copy(alpha = 0.75f),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -85,6 +97,20 @@ fun CaddieScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(
+                                onClick = { resetForm() },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = colors.onBackground
+                                )
+                            ) {
+                                Text("Reset")
+                            }
+                        }
+
                         Text(
                             text = "Virtual Caddie",
                             style = MaterialTheme.typography.headlineSmall,
@@ -94,7 +120,7 @@ fun CaddieScreen(
                         Text(
                             text = "Step ${currentStep + 1} of $totalSteps",
                             style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary
+                            color = colors.primary
                         )
 
                         LinearProgressIndicator(
@@ -211,7 +237,11 @@ fun CaddieScreen(
                             OutlinedButton(
                                 onClick = { currentStep-- },
                                 enabled = currentStep > 0,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = colors.onBackground,
+                                    disabledContentColor = colors.onBackground.copy(alpha = 0.4f)
+                                )
                             ) {
                                 Text("Back")
                             }
@@ -258,16 +288,7 @@ fun CaddieScreen(
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = {
-                            showRecommendationDialog = false
-                            currentStep = 0
-                            distanceInput = ""
-                            selectedElement = CourseElement.FAIRWAY
-                            windType = WindType.NONE
-                            windStrength = 0
-                            elevationType = ElevationType.FLAT
-                            lieType = LieType.NORMAL
-                        }
+                        onClick = { resetForm() }
                     ) {
                         Text("Start Over")
                     }
