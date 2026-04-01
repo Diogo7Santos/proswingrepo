@@ -1,6 +1,5 @@
 package com.example.proswing.ui.screens
 
-import android.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,10 +14,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proswing.viewmodel.ScorecardViewModel
-import com.example.proswing.viewmodel.SettingsViewModel
 import com.example.proswing.data.ScorecardEntity
 import com.example.proswing.viewmodel.Hole
+import com.example.proswing.viewmodel.ScorecardViewModel
+import com.example.proswing.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,9 +40,18 @@ fun ScorecardScreen(
                 AnimatedVisibility(visible = showFabMenu) {
                     Column(horizontalAlignment = Alignment.End) {
                         ExtendedFloatingActionButton(
-                            icon = { Icon(Icons.Default.Add, contentDescription = "9 Holes") },
-                            text = { Text("9 Holes",
-                                color = MaterialTheme.colorScheme.onBackground) },
+                            icon = {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "9 Holes"
+                                )
+                            },
+                            text = {
+                                Text(
+                                    "9 Holes",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            },
                             onClick = {
                                 holeCount = 9
                                 showNewRound = true
@@ -55,9 +63,19 @@ fun ScorecardScreen(
                         Spacer(Modifier.height(8.dp))
 
                         ExtendedFloatingActionButton(
-                            icon = { Icon(Icons.Default.Add, contentDescription = "18 Holes") },
-                            text = { Text("18 Holes",
-                                color = MaterialTheme.colorScheme.onBackground) },
+                            icon = {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "18 Holes",
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            },
+                            text = {
+                                Text(
+                                    "18 Holes",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            },
                             onClick = {
                                 holeCount = 18
                                 showNewRound = true
@@ -78,7 +96,7 @@ fun ScorecardScreen(
                 }
             }
         }
-            ) { innerPadding ->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -94,14 +112,16 @@ fun ScorecardScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // New Round Section
             if (showNewRound) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(Modifier.padding(12.dp)) {
-                        Text("New Round (${holeCount} Holes)", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "New Round (${holeCount} Holes)",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                         Spacer(Modifier.height(8.dp))
                         NewRound(scorecardViewModel, handicap, holeCount) {
                             showNewRound = false
@@ -111,7 +131,6 @@ fun ScorecardScreen(
                 Spacer(Modifier.height(24.dp))
             }
 
-            // Saved Rounds Section
             Text(
                 text = "Saved Rounds",
                 style = MaterialTheme.typography.titleLarge,
@@ -138,7 +157,7 @@ fun NewRound(
     holeCount: Int,
     onFinish: () -> Unit
 ) {
-    var holes by remember { mutableStateOf(List(holeCount) { Hole(it + 1, 4, 1) }) } // start from 1 stroke
+    var holes by remember { mutableStateOf(List(holeCount) { Hole(it + 1, 4, 1) }) }
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -173,13 +192,19 @@ fun NewRound(
 fun HoleCard(hole: Hole, onUpdate: (Hole) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        )
     ) {
         Column(Modifier.padding(12.dp)) {
-            Text("Hole ${hole.number}", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Hole ${hole.number}",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
             Spacer(Modifier.height(8.dp))
 
-            // Select Par (3–6)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 (3..6).forEach { parValue ->
                     FilterChip(
@@ -192,13 +217,15 @@ fun HoleCard(hole: Hole, onUpdate: (Hole) -> Unit) {
 
             Spacer(Modifier.height(8.dp))
 
-            // Stroke input
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Strokes: ${hole.strokes ?: 1}")
+                Text(
+                    "Strokes: ${hole.strokes ?: 1}",
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = {
                         val newStroke = (hole.strokes ?: 1) - 1
@@ -229,56 +256,88 @@ fun ScoreHistory(rounds: List<ScorecardEntity>) {
                 Card(
                     onClick = { expanded = !expanded },
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
                 ) {
                     Column(Modifier.padding(12.dp)) {
-                        Text("Round on ${round.date}", style = MaterialTheme.typography.titleMedium)
-                        Text("Gross: ${round.totalScore} | Net: ${round.netScore} | To Par: ${round.toPar}")
+                        Text(
+                            "Round on ${round.date}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            "Gross: ${round.totalScore} | Net: ${round.netScore} | To Par: ${round.toPar}",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
 
                         AnimatedVisibility(expanded) {
                             Column(Modifier.padding(top = 8.dp)) {
-                                Text("Hole-by-Hole:", style = MaterialTheme.typography.titleSmall)
+                                Text(
+                                    "Hole-by-Hole:",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
                                 Spacer(Modifier.height(8.dp))
 
-                                // Hole Numbers
                                 Row(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        "Hole:",
+                                        modifier = Modifier.width(48.dp),
+                                        textAlign = TextAlign.Start,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
                                     round.holes.forEachIndexed { index, _ ->
                                         Text(
                                             "${index + 1}",
                                             modifier = Modifier.weight(1f),
                                             textAlign = TextAlign.Center,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onBackground
+                                            color = MaterialTheme.colorScheme.onPrimary
                                         )
                                     }
                                 }
 
                                 Spacer(Modifier.height(4.dp))
 
-                                // Pars
                                 Row(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        "Par:",
+                                        modifier = Modifier.width(48.dp),
+                                        textAlign = TextAlign.Start,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
                                     round.pars.forEach { par ->
                                         Text(
                                             par.toString(),
                                             modifier = Modifier.weight(1f),
                                             textAlign = TextAlign.Center,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onBackground
+                                            color = MaterialTheme.colorScheme.onPrimary
                                         )
                                     }
                                 }
 
                                 Spacer(Modifier.height(4.dp))
 
-                                // Strokes
                                 Row(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        "Score:",
+                                        modifier = Modifier.width(48.dp),
+                                        textAlign = TextAlign.Start,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
                                     round.holes.forEach { score ->
                                         Text(
                                             score.toString(),
                                             modifier = Modifier.weight(1f),
                                             textAlign = TextAlign.Center,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onBackground
+                                            color = MaterialTheme.colorScheme.onPrimary
                                         )
                                     }
                                 }
