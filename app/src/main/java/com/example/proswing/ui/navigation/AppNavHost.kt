@@ -166,7 +166,14 @@ fun AppNavHost(
                     navController = navController,
                     startDestination = Destinations.HOME
                 ) {
-                    composable(Destinations.HOME) { HomeScreen() }
+                    composable(Destinations.HOME) {
+                        HomeScreen(
+                            onCaddieClick = { navController.navigate(Destinations.CADDIE) },
+                            onSwingClick = { navController.navigate(Destinations.LEARN) },
+                            onScorecardClick = { navController.navigate(Destinations.SCORECARD) },
+                            onMyBagClick = { navController.navigate(Destinations.MYBAG) }
+                        )
+                    }
                     composable(Destinations.LEARN) { LearnScreen() }
 
                     composable(Destinations.ANALYSE) {
