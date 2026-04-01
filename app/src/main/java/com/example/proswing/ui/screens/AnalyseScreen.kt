@@ -165,7 +165,13 @@ fun AnalyseScreen(
                     },
                     enabled = selectedVideoUri != null
                 ) {
-                    Text("Clear")
+                    Text(
+                        "Clear",
+                        color = if (selectedVideoUri != null)
+                            MaterialTheme.colorScheme.onBackground
+                        else
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    )
                 }
             }
 

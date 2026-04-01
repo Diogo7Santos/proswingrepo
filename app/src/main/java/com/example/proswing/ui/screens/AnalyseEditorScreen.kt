@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -15,6 +16,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,15 +28,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,16 +51,12 @@ private data class LineOverlay(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyseEditorScreen(
-    /**
-     * OPTIONAL hook:
-     * Wire this up in your AppNavHost/ModalNavigationDrawer so that when cropMode is ON,
-     * you set drawer gesturesEnabled = false and/or close the drawer.
-     */
     onRequestLockDrawerGestures: (lock: Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val colors = MaterialTheme.colorScheme
 
     var frames by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var selectedFrame by remember { mutableStateOf<Uri?>(null) }
@@ -68,7 +64,6 @@ fun AnalyseEditorScreen(
     var selectedBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var editorSizePx by remember { mutableStateOf(IntSize(0, 0)) }
 
-    // Tagging selections
     val clubTypes = listOf("Driver", "Wood", "Hybrid", "Iron")
     val positions = listOf("Set up", "Top of Backswing", "Impact")
     val perspectives = listOf("Down-the-line", "Face-on")
@@ -82,7 +77,6 @@ fun AnalyseEditorScreen(
     var perspectiveExpanded by remember { mutableStateOf(false) }
     var showPickerDialog by remember { mutableStateOf(false) }
 
-    // Image transform state (pinch zoom + pan) — only active while Crop mode is ON
     var scale by remember { mutableStateOf(1f) }
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
@@ -93,26 +87,23 @@ fun AnalyseEditorScreen(
         offsetY = 0f
     }
 
-    // Toolbox state
     var templateEnabled by remember { mutableStateOf(false) }
-    var cropMode by remember { mutableStateOf(true) } // start in crop mode
+    var cropMode by remember { mutableStateOf(true) }
     var toolsVisible by remember { mutableStateOf(true) }
 
-    // Ask host to lock drawer gestures while cropping
     LaunchedEffect(cropMode) {
         onRequestLockDrawerGestures(cropMode)
     }
 
-    // Overlay lines state
     var lines by remember { mutableStateOf<List<LineOverlay>>(emptyList()) }
     var selectedLineId by remember { mutableStateOf<Long?>(null) }
 
     val lineColors = listOf(
-        0xFFFF3B30.toInt(), // red
-        0xFF34C759.toInt(), // green
-        0xFF007AFF.toInt(), // blue
-        0xFFFFCC00.toInt(), // yellow
-        0xFFFFFFFF.toInt()  // white
+        0xFFFF3B30.toInt(),
+        0xFF34C759.toInt(),
+        0xFF007AFF.toInt(),
+        0xFFFFCC00.toInt(),
+        0xFFFFFFFF.toInt()
     )
 
     fun addLine() {
@@ -146,7 +137,6 @@ fun AnalyseEditorScreen(
 
     fun selectedLine(): LineOverlay? = lines.firstOrNull { it.id == selectedLineId }
 
-    // --- MediaStore / loading helpers ---
     fun loadFramesFromProSwingFolder(ctx: Context): List<Uri> {
         val resolver = ctx.contentResolver
         val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -321,7 +311,6 @@ fun AnalyseEditorScreen(
         }
     }
 
-    // Load bitmap when selection changes
     LaunchedEffect(selectedFrame) {
         val uri = selectedFrame ?: run {
             selectedBitmap = null
@@ -342,7 +331,6 @@ fun AnalyseEditorScreen(
         }
     }
 
-    // --- Line hit test (tap near a line to select it) ---
     fun distancePointToSegment(px: Float, py: Float, ax: Float, ay: Float, bx: Float, by: Float): Float {
         val abx = bx - ax
         val aby = by - ay
@@ -389,7 +377,6 @@ fun AnalyseEditorScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            // Top-left button
             Button(
                 onClick = {
                     frames = loadFramesFromProSwingFolder(context)
@@ -406,7 +393,6 @@ fun AnalyseEditorScreen(
                     .padding(top = 52.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Editor area
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -419,13 +405,11 @@ fun AnalyseEditorScreen(
                             style = MaterialTheme.typography.bodyLarge
                         )
                     } else {
-                        // WRAP: put the visibility button ABOVE the card
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .fillMaxHeight(0.92f)
                         ) {
-                            // Visibility toggle row (top-right) ABOVE the editor card
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -444,7 +428,6 @@ fun AnalyseEditorScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 shape = MaterialTheme.shapes.large
                             ) {
-                                // IMPORTANT: clip here so the whole editor behaves like your old version
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -457,7 +440,6 @@ fun AnalyseEditorScreen(
                                             CircularProgressIndicator()
                                         }
                                     } else {
-                                        // --- IMAGE layer: ONLY this receives transform gestures when cropMode is true ---
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxSize()
@@ -491,12 +473,10 @@ fun AnalyseEditorScreen(
                                                     m.postScale(baseScale, baseScale)
                                                     m.postTranslate(baseTx, baseTy)
 
-                                                    // zoom about center
                                                     m.postTranslate(-cx, -cy)
                                                     m.postScale(scale, scale)
                                                     m.postTranslate(cx, cy)
 
-                                                    // pan
                                                     m.postTranslate(offsetX, offsetY)
 
                                                     drawBitmap(bmp, m, null)
@@ -504,7 +484,6 @@ fun AnalyseEditorScreen(
                                             }
                                         }
 
-                                        // --- TEMPLATE overlay: never intercept touches ---
                                         if (templateEnabled) {
                                             val resId = when (selectedPerspective) {
                                                 "Down-the-line" -> com.example.proswing.R.drawable.setup_template_dtl
@@ -521,10 +500,6 @@ fun AnalyseEditorScreen(
                                             }
                                         }
 
-                                        // --- LINES overlay ---
-                                        // CRITICAL FIX:
-                                        // Don't keep a full-size pointerInput layer on top when cropMode is ON.
-                                        // We conditionally add pointerInput only when cropMode is OFF.
                                         if (!cropMode) {
                                             Box(
                                                 modifier = Modifier
@@ -562,7 +537,6 @@ fun AnalyseEditorScreen(
                                                 }
                                             }
                                         } else {
-                                            // cropMode ON: draw only (no pointerInput)
                                             Canvas(modifier = Modifier.fillMaxSize()) {
                                                 for (line in lines) {
                                                     val rad = Math.toRadians(line.rotationDeg.toDouble())
@@ -590,7 +564,6 @@ fun AnalyseEditorScreen(
                                             }
                                         }
 
-                                        // --- TOOLBOX (scrollable) ---
                                         if (toolsVisible) {
                                             Card(
                                                 modifier = Modifier
@@ -614,8 +587,10 @@ fun AnalyseEditorScreen(
                                                             modifier = Modifier.fillMaxWidth(),
                                                             enabled = selectedFrame != null
                                                         ) {
-                                                            Text(if (cropMode) "Crop: ON" else "Crop: OFF",
-                                                                color = MaterialTheme.colorScheme.onBackground)
+                                                            Text(
+                                                                if (cropMode) "Crop: ON" else "Crop: OFF",
+                                                                color = MaterialTheme.colorScheme.onBackground
+                                                            )
                                                         }
                                                     }
 
@@ -636,8 +611,10 @@ fun AnalyseEditorScreen(
                                                             modifier = Modifier.fillMaxWidth(),
                                                             enabled = selectedPerspective != null
                                                         ) {
-                                                            Text(if (templateEnabled) "Template: ON" else "Template: OFF",
-                                                                color = MaterialTheme.colorScheme.onBackground)
+                                                            Text(
+                                                                if (templateEnabled) "Template: ON" else "Template: OFF",
+                                                                color = MaterialTheme.colorScheme.onBackground
+                                                            )
                                                         }
                                                     }
 
@@ -703,7 +680,7 @@ fun AnalyseEditorScreen(
                                                             OutlinedButton(
                                                                 onClick = { deleteSelectedLine() },
                                                                 modifier = Modifier.fillMaxWidth()
-                                                            ) { Text("Delete")}
+                                                            ) { Text("Delete") }
                                                         }
                                                     } else {
                                                         item {
@@ -727,7 +704,6 @@ fun AnalyseEditorScreen(
                     }
                 }
 
-                // Save button
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = selectedFrame != null &&
@@ -770,7 +746,6 @@ fun AnalyseEditorScreen(
                 }
             }
 
-            // Picker dialog
             if (showPickerDialog) {
                 val ready =
                     selectedFrame != null &&
@@ -855,7 +830,18 @@ fun AnalyseEditorScreen(
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = clubExpanded) },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .menuAnchor()
+                                        .menuAnchor(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = colors.outline,
+                                        unfocusedTextColor = colors.onBackground,
+                                        focusedBorderColor = colors.outline,
+                                        unfocusedBorderColor = colors.onBackground,
+                                        focusedLabelColor = colors.outline,
+                                        unfocusedLabelColor = colors.onBackground,
+                                        focusedTrailingIconColor = colors.outline,
+                                        unfocusedTrailingIconColor = colors.onBackground,
+                                        cursorColor = colors.outline
+                                    )
                                 )
                                 ExposedDropdownMenu(
                                     expanded = clubExpanded,
@@ -887,7 +873,18 @@ fun AnalyseEditorScreen(
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = positionExpanded) },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .menuAnchor()
+                                        .menuAnchor(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = colors.outline,
+                                        unfocusedTextColor = colors.onBackground,
+                                        focusedBorderColor = colors.outline,
+                                        unfocusedBorderColor = colors.onBackground,
+                                        focusedLabelColor = colors.outline,
+                                        unfocusedLabelColor = colors.onBackground,
+                                        focusedTrailingIconColor = colors.outline,
+                                        unfocusedTrailingIconColor = colors.onBackground,
+                                        cursorColor = colors.outline
+                                    )
                                 )
                                 ExposedDropdownMenu(
                                     expanded = positionExpanded,
@@ -919,7 +916,18 @@ fun AnalyseEditorScreen(
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = perspectiveExpanded) },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .menuAnchor()
+                                        .menuAnchor(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = colors.outline,
+                                        unfocusedTextColor = colors.onBackground,
+                                        focusedBorderColor = colors.outline,
+                                        unfocusedBorderColor = colors.onBackground,
+                                        focusedLabelColor = colors.outline,
+                                        unfocusedLabelColor = colors.onBackground,
+                                        focusedTrailingIconColor = colors.outline,
+                                        unfocusedTrailingIconColor = colors.onBackground,
+                                        cursorColor = colors.outline
+                                    )
                                 )
                                 ExposedDropdownMenu(
                                     expanded = perspectiveExpanded,
@@ -947,12 +955,22 @@ fun AnalyseEditorScreen(
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showPickerDialog = false }) { Text("Cancel") }
+                        Button(
+                            onClick = { showPickerDialog = false },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.primary,
+                                contentColor = colors.onBackground
+                            )
+                        ) { Text("Cancel") }
                     },
                     confirmButton = {
-                        TextButton(
+                        Button(
                             enabled = ready,
-                            onClick = { showPickerDialog = false }
+                            onClick = { showPickerDialog = false },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.primary,
+                                contentColor = colors.onBackground
+                            )
                         ) { Text("Continue") }
                     }
                 )
