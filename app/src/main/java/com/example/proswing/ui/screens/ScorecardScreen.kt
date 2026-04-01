@@ -43,7 +43,8 @@ fun ScorecardScreen(
                             icon = {
                                 Icon(
                                     Icons.Default.Add,
-                                    contentDescription = "9 Holes"
+                                    contentDescription = "9 Holes",
+                                    tint = MaterialTheme.colorScheme.onBackground
                                 )
                             },
                             text = {
@@ -57,7 +58,7 @@ fun ScorecardScreen(
                                 showNewRound = true
                                 showFabMenu = false
                             },
-                            containerColor = colors.secondaryContainer
+                            containerColor = colors.secondary
                         )
 
                         Spacer(Modifier.height(8.dp))
@@ -81,7 +82,7 @@ fun ScorecardScreen(
                                 showNewRound = true
                                 showFabMenu = false
                             },
-                            containerColor = colors.primaryContainer
+                            containerColor = colors.secondary
                         )
 
                         Spacer(Modifier.height(8.dp))
@@ -115,7 +116,10 @@ fun ScorecardScreen(
             if (showNewRound) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = colors.background
+                    )
                 ) {
                     Column(Modifier.padding(12.dp)) {
                         Text(
@@ -190,6 +194,8 @@ fun NewRound(
 
 @Composable
 fun HoleCard(hole: Hole, onUpdate: (Hole) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -210,7 +216,10 @@ fun HoleCard(hole: Hole, onUpdate: (Hole) -> Unit) {
                     FilterChip(
                         selected = hole.par == parValue,
                         onClick = { onUpdate(hole.copy(par = parValue)) },
-                        label = { Text("Par $parValue") }
+                        label = { Text("Par $parValue") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = colors.background
+                        )
                     )
                 }
             }
@@ -227,15 +236,29 @@ fun HoleCard(hole: Hole, onUpdate: (Hole) -> Unit) {
                     color = MaterialTheme.colorScheme.onPrimary
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = {
-                        val newStroke = (hole.strokes ?: 1) - 1
-                        if (newStroke >= 1) onUpdate(hole.copy(strokes = newStroke))
-                    }) { Text("-") }
+                    Button(
+                        onClick = {
+                            val newStroke = (hole.strokes ?: 1) - 1
+                            if (newStroke >= 1) onUpdate(hole.copy(strokes = newStroke))
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.background
+                        )
+                    ) {
+                        Text("-")
+                    }
 
-                    Button(onClick = {
-                        val newStroke = (hole.strokes ?: 1) + 1
-                        onUpdate(hole.copy(strokes = newStroke))
-                    }) { Text("+") }
+                    Button(
+                        onClick = {
+                            val newStroke = (hole.strokes ?: 1) + 1
+                            onUpdate(hole.copy(strokes = newStroke))
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.background
+                        )
+                    ) {
+                        Text("+")
+                    }
                 }
             }
         }
