@@ -88,7 +88,8 @@ fun CompareScreen(
             if (editedBitmap == null) {
                 Text("No edited image available.")
                 Button(onClick = { navController.popBackStack() }) {
-                    Text("Back")
+                    Text("Back",
+                        color = MaterialTheme.colorScheme.onBackground)
                 }
                 return@Column
             }
@@ -129,7 +130,7 @@ fun CompareScreen(
                                 if (isSelected) {
                                     Text(
                                         text = "Selected",
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = MaterialTheme.colorScheme.onBackground,
                                         style = MaterialTheme.typography.labelLarge
                                     )
                                 }
@@ -179,7 +180,8 @@ fun CompareScreen(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Back")
+                    Text("Back",
+                        color = MaterialTheme.colorScheme.onBackground)
                 }
 
                 Button(
