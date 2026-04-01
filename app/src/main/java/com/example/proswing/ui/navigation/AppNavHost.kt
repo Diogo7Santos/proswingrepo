@@ -33,7 +33,8 @@ fun AppNavHost(
         Destinations.MYBAG to "My Bag",
         Destinations.YARDAGES to "Yardages",
         Destinations.SETTINGS to "Settings",
-        Destinations.ANALYSE_EDITOR to "Analyse Editor"
+        Destinations.ANALYSE_EDITOR to "Analyse Editor",
+        Destinations.COMPARE to "Compare"
     )
 
     val navController = rememberNavController()
@@ -174,6 +175,7 @@ fun AppNavHost(
                             onMyBagClick = { navController.navigate(Destinations.MYBAG) }
                         )
                     }
+
                     composable(Destinations.LEARN) { LearnScreen() }
 
                     composable(Destinations.ANALYSE) {
@@ -182,7 +184,13 @@ fun AppNavHost(
                         )
                     }
 
-                    composable(Destinations.ANALYSE_EDITOR) { AnalyseEditorScreen() }
+                    composable(Destinations.ANALYSE_EDITOR) {
+                        AnalyseEditorScreen(navController = navController)
+                    }
+
+                    composable(Destinations.COMPARE) {
+                        CompareScreen(navController = navController)
+                    }
 
                     composable(Destinations.CADDIE) { CaddieScreen(database = database) }
                     composable(Destinations.HANDICAP) { HandicapScreen() }

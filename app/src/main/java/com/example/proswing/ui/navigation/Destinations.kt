@@ -12,5 +12,6 @@ object Destinations {
     const val YARDAGES = "yardages"
 
     const val ANALYSE_EDITOR = "analyse_editor"
+    const val COMPARE = "compare"
 
 }

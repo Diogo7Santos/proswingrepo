@@ -9,7 +9,6 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -34,6 +33,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.proswing.ui.navigation.Destinations
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,6 +53,7 @@ private data class LineOverlay(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyseEditorScreen(
+    navController: NavController,
     onRequestLockDrawerGestures: (lock: Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -604,7 +606,9 @@ fun AnalyseEditorScreen(
                                                             onClick = { addLine() },
                                                             modifier = Modifier.fillMaxWidth(),
                                                             enabled = editorSizePx.width > 0 && editorSizePx.height > 0
-                                                        ) { Text("Add line") }
+                                                        ) {
+                                                            Text("Add line")
+                                                        }
                                                     }
 
                                                     item {
@@ -628,7 +632,8 @@ fun AnalyseEditorScreen(
                                                         item {
                                                             OutlinedButton(
                                                                 onClick = {
-                                                                    val idx = lineColors.indexOf(sel.colorArgb).let { if (it < 0) 0 else it }
+                                                                    val idx = lineColors.indexOf(sel.colorArgb)
+                                                                        .let { if (it < 0) 0 else it }
                                                                     val next = lineColors[(idx + 1) % lineColors.size]
                                                                     updateSelectedLine { it.copy(colorArgb = next) }
                                                                     cropMode = false
@@ -735,45 +740,90 @@ fun AnalyseEditorScreen(
                     }
                 }
 
-                Button(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = selectedFrame != null &&
-                            selectedBitmap != null &&
-                            editorSizePx.width > 0 &&
-                            editorSizePx.height > 0,
-                    onClick = {
-                        val bmp = selectedBitmap ?: return@Button
-                        val w = editorSizePx.width
-                        val h = editorSizePx.height
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        enabled = selectedFrame != null &&
+                                selectedBitmap != null &&
+                                editorSizePx.width > 0 &&
+                                editorSizePx.height > 0,
+                        onClick = {
+                            val bmp = selectedBitmap ?: return@OutlinedButton
+                            val w = editorSizePx.width
+                            val h = editorSizePx.height
 
-                        scope.launch {
-                            val templateBmp = if (templateEnabled) getTemplateForSelectedPerspective() else null
+                            scope.launch {
+                                val templateBmp = if (templateEnabled) getTemplateForSelectedPerspective() else null
 
-                            val rendered = withContext(Dispatchers.Default) {
-                                renderEditedBitmap(
-                                    src = bmp,
-                                    template = templateBmp,
-                                    viewportW = w,
-                                    viewportH = h,
-                                    userScale = scale,
-                                    userOffsetX = offsetX,
-                                    userOffsetY = offsetY,
-                                    drawTemplate = templateEnabled,
-                                    templateAlpha = 64,
-                                    linesToDraw = lines
-                                )
-                            }
+                                val rendered = withContext(Dispatchers.Default) {
+                                    renderEditedBitmap(
+                                        src = bmp,
+                                        template = templateBmp,
+                                        viewportW = w,
+                                        viewportH = h,
+                                        userScale = scale,
+                                        userOffsetX = offsetX,
+                                        userOffsetY = offsetY,
+                                        drawTemplate = templateEnabled,
+                                        templateAlpha = 64,
+                                        linesToDraw = lines
+                                    )
+                                }
 
-                            val saved = saveBitmapToGallery(context, rendered)
-                            if (saved != null) {
-                                snackbarHostState.showSnackbar("Saved edited image to gallery.")
-                            } else {
-                                snackbarHostState.showSnackbar("Failed to save edited image.")
+                                CompareState.editedBitmap = rendered
+                                navController.navigate(Destinations.COMPARE)
                             }
                         }
+                    ) {
+                        Text(
+                            text = "Compare",
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
-                ) {
-                    Text("Save")
+
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        enabled = selectedFrame != null &&
+                                selectedBitmap != null &&
+                                editorSizePx.width > 0 &&
+                                editorSizePx.height > 0,
+                        onClick = {
+                            val bmp = selectedBitmap ?: return@Button
+                            val w = editorSizePx.width
+                            val h = editorSizePx.height
+
+                            scope.launch {
+                                val templateBmp = if (templateEnabled) getTemplateForSelectedPerspective() else null
+
+                                val rendered = withContext(Dispatchers.Default) {
+                                    renderEditedBitmap(
+                                        src = bmp,
+                                        template = templateBmp,
+                                        viewportW = w,
+                                        viewportH = h,
+                                        userScale = scale,
+                                        userOffsetX = offsetX,
+                                        userOffsetY = offsetY,
+                                        drawTemplate = templateEnabled,
+                                        templateAlpha = 64,
+                                        linesToDraw = lines
+                                    )
+                                }
+
+                                val saved = saveBitmapToGallery(context, rendered)
+                                if (saved != null) {
+                                    snackbarHostState.showSnackbar("Saved edited image to gallery.")
+                                } else {
+                                    snackbarHostState.showSnackbar("Failed to save edited image.")
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Save")
+                    }
                 }
             }
 
