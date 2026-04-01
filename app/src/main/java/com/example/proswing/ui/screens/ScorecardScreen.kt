@@ -1,23 +1,35 @@
 package com.example.proswing.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proswing.data.ScorecardEntity
 import com.example.proswing.viewmodel.Hole
 import com.example.proswing.viewmodel.ScorecardViewModel
 import com.example.proswing.viewmodel.SettingsViewModel
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -267,6 +279,8 @@ fun HoleCard(hole: Hole, onUpdate: (Hole) -> Unit) {
 
 @Composable
 fun ScoreHistory(rounds: List<ScorecardEntity>) {
+    val context = LocalContext.current
+
     if (rounds.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("No saved rounds yet.")
@@ -285,15 +299,33 @@ fun ScoreHistory(rounds: List<ScorecardEntity>) {
                     )
                 ) {
                     Column(Modifier.padding(12.dp)) {
-                        Text(
-                            "Round on ${round.date}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Text(
-                            "Gross: ${round.totalScore} | Net: ${round.netScore} | To Par: ${round.toPar}",
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Round on ${round.date}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                                Text(
+                                    "Gross: ${round.totalScore} | Net: ${round.netScore} | To Par: ${round.toPar}",
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { shareScorecardImage(context, round) }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share scorecard",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
 
                         AnimatedVisibility(expanded) {
                             Column(Modifier.padding(top = 8.dp)) {
@@ -371,4 +403,110 @@ fun ScoreHistory(rounds: List<ScorecardEntity>) {
             }
         }
     }
+}
+
+private fun shareScorecardImage(context: Context, round: ScorecardEntity) {
+    val bitmap = createScorecardBitmap(round)
+    val uri = saveBitmapToCache(context, bitmap) ?: return
+
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/png"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        putExtra(Intent.EXTRA_SUBJECT, "Golf Scorecard - ${round.date}")
+        putExtra(Intent.EXTRA_TEXT, "My golf round from ${round.date}")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    context.startActivity(Intent.createChooser(shareIntent, "Share scorecard"))
+}
+
+private fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri? {
+    return try {
+        val cachePath = File(context.cacheDir, "shared_scorecards")
+        cachePath.mkdirs()
+
+        val file = File(cachePath, "scorecard_${System.currentTimeMillis()}.png")
+        FileOutputStream(file).use { out ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        }
+
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+private fun createScorecardBitmap(round: ScorecardEntity): Bitmap {
+    val width = 1200
+    val rowHeight = 90
+    val headerHeight = 220
+    val summaryHeight = 120
+    val tableRows = 3
+    val height = headerHeight + summaryHeight + (tableRows * rowHeight) + 80
+
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    canvas.drawColor(android.graphics.Color.WHITE)
+
+    val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+        textSize = 52f
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    }
+
+    val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+        textSize = 34f
+    }
+
+    val boldPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+        textSize = 34f
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    }
+
+    val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+        strokeWidth = 3f
+    }
+
+    canvas.drawText("Golf Scorecard", 40f, 70f, titlePaint)
+    canvas.drawText("Date: ${round.date}", 40f, 130f, bodyPaint)
+    canvas.drawText(
+        "Gross: ${round.totalScore}    Net: ${round.netScore}    To Par: ${round.toPar}",
+        40f,
+        190f,
+        bodyPaint
+    )
+
+    val startY = 260f
+    val labelWidth = 140f
+    val availableWidth = width - 80f - labelWidth
+    val colWidth = availableWidth / round.holes.size
+
+    fun drawRow(label: String, values: List<String>, rowIndex: Int) {
+        val yTop = startY + rowIndex * rowHeight
+        val yText = yTop + 55f
+
+        canvas.drawText(label, 40f, yText, boldPaint)
+
+        values.forEachIndexed { index, value ->
+            val x = 40f + labelWidth + (index * colWidth) + (colWidth / 2)
+            val textWidth = bodyPaint.measureText(value)
+            canvas.drawText(value, x - textWidth / 2, yText, bodyPaint)
+        }
+
+        canvas.drawLine(40f, yTop + rowHeight - 10f, width - 40f, yTop + rowHeight - 10f, linePaint)
+    }
+
+    drawRow("Hole", round.holes.indices.map { (it + 1).toString() }, 0)
+    drawRow("Par", round.pars.map { it.toString() }, 1)
+    drawRow("Score", round.holes.map { it.toString() }, 2)
+
+    return bitmap
 }
