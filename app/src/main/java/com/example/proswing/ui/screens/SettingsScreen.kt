@@ -32,7 +32,6 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            // Distance Units
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -54,7 +53,6 @@ fun SettingsScreen(
                 )
             }
 
-            // Temperature Units
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -111,7 +109,7 @@ fun SettingsScreen(
 
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
 
-        // 🏌️ Handicap Section
+        // Handicap Section
         var expanded by remember { mutableStateOf(false) }
         val handicapLevels = listOf(
             "Beginner (40)" to 40,
@@ -136,18 +134,28 @@ fun SettingsScreen(
                     readOnly = true,
                     value = "Current: ${settings.handicap}",
                     onValueChange = {},
-                    label = { Text("Select Handicap Level") },
+                    label = {
+                        Text(
+                            "Select Handicap Level",
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     },
                     modifier = Modifier
                         .menuAnchor()
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.background,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background
+                    )
                 )
 
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onDismissRequest = { expanded = false },
+                    containerColor = MaterialTheme.colorScheme.background
                 ) {
                     handicapLevels.forEach { (label, value) ->
                         DropdownMenuItem(
