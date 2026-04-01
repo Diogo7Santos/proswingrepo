@@ -101,19 +101,14 @@ private fun YoutubeEmbed(
 
     val start = (startSeconds ?: 0).coerceAtLeast(0)
 
-    // Reset error state whenever a new URL is selected
     var embedFailed by remember(youtubeUrl) { mutableStateOf(false) }
-
-    // Keep refs so we can cue/load when lesson changes
     var playerView: YouTubePlayerView? by remember { mutableStateOf(null) }
     var youTubePlayer: YouTubePlayer? by remember { mutableStateOf(null) }
 
-    // If the player never becomes ready (common when init fails), show fallback after a few seconds.
     LaunchedEffect(videoId, start) {
         embedFailed = false
         youTubePlayer = null
 
-        // Give it a moment to initialise; if still not ready, show fallback.
         delay(4000)
         if (youTubePlayer == null) {
             embedFailed = true
@@ -143,7 +138,6 @@ private fun YoutubeEmbed(
                     YouTubePlayerView(ctx).also { view ->
                         playerView = view
 
-                        // MANUAL INITIALIZATION (more reliable in Compose than auto init)
                         view.enableAutomaticInitialization = false
 
                         val iFramePlayerOptions = IFramePlayerOptions.Builder()
@@ -154,7 +148,6 @@ private fun YoutubeEmbed(
                             object : AbstractYouTubePlayerListener() {
                                 override fun onReady(player: YouTubePlayer) {
                                     youTubePlayer = player
-                                    // cueVideo avoids autoplay restrictions
                                     player.cueVideo(videoId, start.toFloat())
                                 }
 
@@ -173,7 +166,6 @@ private fun YoutubeEmbed(
                     }
                 },
                 update = {
-                    // When user selects a different lesson, update the mounted player
                     youTubePlayer?.cueVideo(videoId, start.toFloat())
                 }
             )
@@ -310,17 +302,22 @@ fun LearnScreen() {
             ModalDrawerSheet(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(340.dp)
+                    .width(340.dp),
+                drawerContainerColor = MaterialTheme.colorScheme.background,
+                drawerContentColor = MaterialTheme.colorScheme.onBackground
             ) {
                 Spacer(Modifier.height(12.dp))
 
                 Text(
                     text = "Course Content",
                     style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
-                Divider()
+                Divider(
+                    color = MaterialTheme.colorScheme.outline
+                )
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -334,7 +331,10 @@ fun LearnScreen() {
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                                 .fillMaxWidth()
                                 .animateContentSize(),
-                            shape = RoundedCornerShape(16.dp)
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
                         ) {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 Row(
@@ -347,12 +347,14 @@ fun LearnScreen() {
                                     Text(
                                         text = chapter.title,
                                         style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.weight(1f)
+                                        modifier = Modifier.weight(1f),
+                                        color = MaterialTheme.colorScheme.onPrimary
                                     )
 
                                     Icon(
                                         imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                                        contentDescription = if (isExpanded) "Collapse" else "Expand"
+                                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                        tint = MaterialTheme.colorScheme.onPrimary
                                     )
                                 }
 
@@ -379,12 +381,16 @@ fun LearnScreen() {
                                                     text = "${lesson.id}  ${lesson.title}",
                                                     style = MaterialTheme.typography.bodyLarge,
                                                     modifier = Modifier.weight(1f),
-                                                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                                                    else MaterialTheme.colorScheme.onSurface
+                                                    color = if (isSelected) {
+                                                        MaterialTheme.colorScheme.onPrimary
+                                                    } else {
+                                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                                                    }
                                                 )
                                                 Icon(
                                                     imageVector = Icons.Filled.KeyboardArrowRight,
                                                     contentDescription = "Open lesson",
+                                                    tint = MaterialTheme.colorScheme.onPrimary
                                                 )
                                             }
                                         }
@@ -404,7 +410,10 @@ fun LearnScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
-                shape = RoundedCornerShape(18.dp)
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
                 Column(
                     modifier = Modifier
@@ -416,13 +425,15 @@ fun LearnScreen() {
                     if (selectedLesson == null) {
                         Text(
                             text = "Learn",
-                            style = MaterialTheme.typography.headlineMedium
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
 
                         Text(
                             text = "Chapter 1 is wired with titles + YouTube clips.\n\nUse the right-edge handle to open the chapter list and select a lesson.",
                             style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Start
+                            textAlign = TextAlign.Start,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -430,14 +441,15 @@ fun LearnScreen() {
                         Text(
                             text = "Nothing selected yet.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                     } else {
                         val lesson = selectedLesson!!
 
                         Text(
                             text = "Lesson ${lesson.id}: ${lesson.title}",
-                            style = MaterialTheme.typography.headlineMedium
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
 
                         if (lesson.youtubeUrl != null) {
@@ -451,7 +463,7 @@ fun LearnScreen() {
                             Text(
                                 text = rangeText,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                             )
 
                             YoutubeEmbed(
@@ -461,13 +473,19 @@ fun LearnScreen() {
                         } else {
                             Text(
                                 text = "This lesson has no video yet.",
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        TextButton(onClick = { selectedLesson = null }) {
+                        TextButton(
+                            onClick = { selectedLesson = null },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onBackground
+                            )
+                        ) {
                             Text("Back to introduction")
                         }
                     }
@@ -477,12 +495,11 @@ fun LearnScreen() {
                     Text(
                         text = "Tip: Use the right-edge handle to open the lesson list.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
                 }
             }
 
-            // Right-edge "handle" to open the drawer
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
@@ -502,7 +519,6 @@ fun LearnScreen() {
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
-
         }
     }
 }

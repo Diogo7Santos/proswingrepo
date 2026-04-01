@@ -29,6 +29,7 @@ private val LightColorScheme = lightColorScheme(
     primary = LightGreen,
     onPrimary = GraphiteGray,
     onPrimaryContainer = PorcelainWhite,
+    secondary = Beige,
     outline = Green,
     background = PorcelainWhite,
     onBackground = Black
